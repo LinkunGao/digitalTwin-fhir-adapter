@@ -5,6 +5,8 @@ from utils import tools
 async def test():
     adapter = Adpter("http://localhost:8080/fhir/")
 
+    # await adapter.loader.import_dataset('./dataset')
+
     patientResource = adapter.client.resources('Patient')
     patients = await patientResource.search(name=['John', 'Thompson']).fetch_all()
     tools.printPatients(patients)
