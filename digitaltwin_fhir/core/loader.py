@@ -3,12 +3,12 @@ import sys
 from pathlib import Path
 class Loader:
     def __init__(self, client):
-        self.client = client
+        self._client = client
 
     async def _import_bundle(self, filename):
         with open(filename, encoding='utf-8') as fd:
             patient_json = json.load(fd)
-        bundle = self.client.resource('Bundle')
+        bundle = self._client.resource('Bundle')
         bundle['type'] = 'transaction'
         bundle['entry'] = patient_json['entry']
         await bundle.save()
