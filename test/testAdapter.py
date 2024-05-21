@@ -1,28 +1,28 @@
 import asyncio
-from digitaltwin_fhir.core import Adpter
+from digitaltwin_fhir.core import Adapter
 from utils import tools
 
-async def test():
-    adapter = Adpter("http://localhost:8080/fhir/")
+class Test:
+    adapter = Adapter("http://localhost:8080/fhir/")
 
-    # TODO 1: test load bundle dataset
-    # await adapter.load_fhir_bundle_dataset('./dataset')
+    async def test_load_bundle(self):
 
-    # TODO 2: test search Patient by name
-    await adapter.load_dicom_dataset("/")
-    patientResource = adapter.client.resources('Patient')
-    # # patients = await patientResource.search(name=['John', 'Thompson']).fetch_all()
-    patients = await patientResource.search(identifier="yyds-2").fetch_all()
-    print(patients)
-    tools.printPatients(patients)
-    # p = patients[0]
-    # p['meta']['profile'] = ["http://hl7.org.nz/fhir/StructureDefinition/NzPatient"]
-    # await p.save()
+        # TODO 1: test load bundle dataset
+        await self.adapter.loader().import_dataset('./dataset')
+        # TODO 3:
+        # await adapter.load_dicom_dataset('')
 
-    # TODO 3:
-    # await adapter.load_dicom_dataset('')
+    async def test_search(self):
+        # TODO 2: test search Patient by name
+        t = await self.adapter.create()._is_resource_exist("Patient", "d557ac68-f365-0718-c945-8722ec109c07")
+        print(t)
+        p = await self.adapter.search().search_resource('Patient', 'd557ac68-f365-0718-c945-8722ec109c07')
+        print(p)
+        ps = await self.adapter.search().search_resources('Patient')
+        print(ps)
 
 
 if __name__ == '__main__':
+    test = Test()
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(test())
+    loop.run_until_complete(test.test_search())
