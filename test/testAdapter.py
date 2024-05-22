@@ -2,6 +2,7 @@ import asyncio
 from digitaltwin_fhir.core import Adapter
 from utils import tools
 
+
 class Test:
     adapter = Adapter("http://localhost:8080/fhir/")
 
@@ -14,7 +15,7 @@ class Test:
 
     async def test_search(self):
         # TODO 2: test search Patient by name
-        t = await self.adapter.create()._is_resource_exist("Patient", "d557ac68-f365-0718-c945-8722ec109c07")
+        t = await self.adapter.create().create_resource("Patient", "d557ac68-f365-0718-c945-8722ec109c07")
         print(t)
         p = await self.adapter.search().search_resource('Patient', 'd557ac68-f365-0718-c945-8722ec109c07')
         print(p)
