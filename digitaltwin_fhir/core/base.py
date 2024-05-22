@@ -2,6 +2,7 @@ import json
 import sys
 from pathlib import Path
 from abc import ABC, abstractmethod
+from .utils import Code, Coding, CodeableConcept
 
 
 class AbstractCRUD(ABC):
@@ -47,19 +48,29 @@ class Loader(AbstractCRUD):
 
 class Create(AbstractCRUD):
     def __init__(self, operator, core):
+        self.resource = None
         super().__init__(operator, core)
 
-    def create_resource(self, **kwargs):
-        pass
+    async def create_resource(self, resource_type, identifier, **kwargs):
+        is_exist = await self._is_resource_exist(resource_type, identifier)
+        if is_exist:
+            return
+        self.resource = self._create_resource(resource_type, identifier)
+        for k, v in kwargs:
+            self.resource[k] = v
+        return self
 
-    def _coding(self):
-        pass
+    async def update_reference(self, **kwargs):
+        if self.resource is None:
+            return
 
-    def _codeableconcept(self):
-        pass
+
+    def save(self):
+        self.resource.save()
+
+
 
     def _create_resource(self, resource_type, identifier, system="http://sparc.sds.dataset"):
-
         resource = self.core.sync_client.resource(resource_type)
 
         resource['identifier'] = [
@@ -72,8 +83,8 @@ class Create(AbstractCRUD):
         return resource
 
     async def _is_resource_exist(self, resource_type, identifier):
-        workflows = await self.core.search().search_resource(resource_type=resource_type, identifier=identifier)
-        if len(workflows) > 0:
+        resources = await self.core.search().search_resource(resource_type=resource_type, identifier=identifier)
+        if len(resources) > 0:
             print(f"the {resource_type} already exist! identifier: {identifier}")
             return True
         return False
