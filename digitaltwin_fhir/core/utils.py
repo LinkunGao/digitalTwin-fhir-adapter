@@ -1,48 +1,36 @@
-from typing import List
-class Code:
-    def __init__(self, value: str = ""):
-        self.value = value
+import datetime
+import pytz
 
-    def get(self):
-        return self.value
+FHIR_DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+FHIR_DATE_FORMAT = "%Y-%m-%d"
 
 
-class Coding:
-
-    def __init__(self, system: str = "", version: str = "", code: Code = None, display: str = "",
-                 userSelected: bool = ""):
-        self.system = system
-        self.version = version
-        self.code = code
-        self.display = display
-        self.userSelected = userSelected
-
-    def get(self):
-        coding = {
-            "system": self.system,
-            "version": self.version,
-            "code": self.code.get() if isinstance(self.code, Code) else None,
-            "display": self.display,
-            "userSelected": self.userSelected
-        }
-        return {k: v for k, v in coding.items() if v not in ("", None)}
+def _format_date_time(date: datetime.datetime):
+    return pytz.utc.normalize(date).strftime(FHIR_DATE_TIME_FORMAT)
 
 
-class CodeableConcept:
+def _format_date(date: datetime.date):
+    return date.strftime(FHIR_DATE_FORMAT)
 
-    def __init__(self, codings: List[Coding] = None, text: str = ""):
-        self.codings = codings
-        self.text = text
 
-    def get(self):
-        codeableconcept = {
-            "coding": [coding.get() for coding in self.codings if isinstance(coding, Coding)],
-            "text": self.text
-        }
+def transform_value(value):
+    """
+    >>> transform_value(datetime.datetime(2019, 1, 1, tzinfo=pytz.utc))
+    '2019-01-01T00:00:00Z'
 
-        return {k: v for k, v in codeableconcept.items() if v not in ("", None)}
+    >>> transform_value(datetime.date(2019, 1, 1))
+    '2019-01-01'
 
-class Reference:
+    >>> transform_value(True)
+    'true'
+    """
+    if isinstance(value, datetime.datetime):
+        return _format_date_time(value)
+    if isinstance(value, datetime.date):
+        return _format_date(value)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return value
 
-    def __init__(self, reference, display:str = ""):
-        pass
+
+
