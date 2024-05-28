@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
-from .Element import Identifier, Meta
+from .element import Identifier, Meta
 
 
 class AbstractResource(ABC):
@@ -13,5 +13,5 @@ class AbstractResource(ABC):
         pass
 
     @abstractmethod
-    def transfer(self):
+    def convert(self):
         pass
