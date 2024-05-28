@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 from abc import ABC, abstractmethod
-from .utils import Code, Coding, CodeableConcept
+from .resource import Code, Coding, CodeableConcept
 
 
 class AbstractCRUD(ABC):

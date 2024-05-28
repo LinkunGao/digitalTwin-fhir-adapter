@@ -1,2 +1,8 @@
 from .lib import Adapter
-from .utils import Code, Coding, CodeableConcept
+from .utils import transform_value
+from .resource import (
+    Code, Coding, CodeableConcept, ContactPoint, Reference, Address, Attachment, Period, Profile, Identifier, HumanName,
+)
+from .resource import (
+    Patient
+)
