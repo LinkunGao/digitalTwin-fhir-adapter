@@ -1,6 +1,6 @@
 from abc import ABC
 from .abstract_resource import AbstractResource
-from .element import (Meta, Identifier, ContactPoint, CodeableConcept, Reference,
+from .element import (Meta, Identifier, ContactDetail, CodeableConcept, Reference,
                       Period, RelatedArtifact, Annotation)
 from typing import Optional, List, Literal
 
@@ -10,21 +10,6 @@ ResearchStudy_Phase_Code = ["n-a", "early-phase-1", "phase-1", "phase-1-phase-2"
                             "phase-3", "phase-4"]
 ResearchStudy_Reason_Stopped = ["accrual-goal-met", "closed-due-to-toxicity", "closed-due-to-lack-of-study-progress",
                                 "temporarily-closed-per-study-design"]
-
-
-class ResearchStudyContactDetail:
-
-    def __init__(self, name: Optional[str] = None, telecom: Optional[List[ContactPoint]] = None):
-        self.name = name
-        self.telecom = telecom
-
-    def get(self):
-        contactdetail = {
-            "name": self.name if isinstance(self.name, str) else None,
-            "telecom": [t.get() for t in self.telecom if isinstance(t, ContactPoint)] if isinstance(self.telecom,
-                                                                                                    list) else None
-        }
-        return {k: v for k, v in contactdetail.items() if v not in ("", None, [])}
 
 
 class Arm:
@@ -68,7 +53,7 @@ class ResearchStudy(AbstractResource, ABC):
                  part_of: Optional[List[Reference]] = None, primary_purpose_type: Optional[CodeableConcept] = None,
                  phase: Optional[CodeableConcept] = None, category: Optional[List[CodeableConcept]] = None,
                  focus: Optional[List[CodeableConcept]] = None, condition: Optional[List[CodeableConcept]] = None,
-                 contact: Optional[List[ResearchStudyContactDetail]] = None,
+                 contact: Optional[List[ContactDetail]] = None,
                  related_artifact: Optional[List[RelatedArtifact]] = None,
                  keyword: Optional[List[CodeableConcept]] = None, location: Optional[List[CodeableConcept]] = None,
                  description: Optional[str] = None, enrollment: Optional[List[Reference]] = None,
@@ -125,7 +110,7 @@ class ResearchStudy(AbstractResource, ABC):
                                                                                                    list) else None,
             "condition": [c.get() for c in self.condition if isinstance(c, CodeableConcept)] if isinstance(
                 self.condition, list) else None,
-            "contact": [c.get() for c in self.contact if isinstance(c, ResearchStudyContactDetail)] if isinstance(
+            "contact": [c.get() for c in self.contact if isinstance(c, ContactDetail)] if isinstance(
                 self.contact,
                 list) else None,
             "relatedArtifact": [a.get() for a in self.related_artifact if isinstance(a, RelatedArtifact)] if isinstance(
