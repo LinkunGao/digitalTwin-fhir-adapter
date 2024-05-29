@@ -168,6 +168,21 @@ class ContactPoint:
         return {k: v for k, v in contactpoint.items() if v not in ("", None)}
 
 
+class ContactDetail:
+
+    def __init__(self, name: Optional[str] = None, telecom: Optional[List[ContactPoint]] = None):
+        self.name = name
+        self.telecom = telecom
+
+    def get(self):
+        contactdetail = {
+            "name": self.name if isinstance(self.name, str) else None,
+            "telecom": [t.get() for t in self.telecom if isinstance(t, ContactPoint)] if isinstance(self.telecom,
+                                                                                                    list) else None
+        }
+        return {k: v for k, v in contactdetail.items() if v not in ("", None, [])}
+
+
 class Address:
 
     def __init__(self, use: Literal["home", "work", "temp", "old", "billing", ""] = "", text: str = "",
@@ -313,9 +328,209 @@ class Annotation:
 
     def get(self):
         annotation = {
-            "authorReference": self.author.get()["authorReference"] if isinstance(self.author, Author) else None,
-            "authorString": self.author.get()["authorString"] if isinstance(self.author, Author) else None,
+            "authorReference": self.author.get().get("authorReference") if isinstance(self.author, Author) else None,
+            "authorString": self.author.get().get("authorString") if isinstance(self.author, Author) else None,
             "time": self.time if isinstance(self.time, str) else None,
             "text": self.text if isinstance(self.text, str) else None
         }
         return {k: v for k, v in annotation.items() if v not in ("", None)}
+
+
+class RepeatBounds:
+
+    def __init__(self, bounds_duration: Optional[str] = None, bounds_range: Optional[Range] = None,
+                 bounds_period: Optional[Period] = None):
+        self.bounds_duration = bounds_duration
+        self.bounds_range = bounds_range
+        self.bounds_period = bounds_period
+
+    def get(self):
+        bounds = {
+            "boundsDuration": self.bounds_duration if isinstance(self.bounds_duration, str) else None,
+            "boundsRange": self.bounds_range.get() if isinstance(self.bounds_range, Range) else None,
+            "boundsPeriod": self.bounds_period.get() if isinstance(self.bounds_period, Period) else None
+        }
+        return {k: v for k, v in bounds.items() if v not in ("", None)}
+
+
+class Repeat:
+
+    def __init__(self, bounds: Optional[RepeatBounds] = None, count: Optional[int] = None,
+                 count_max: Optional[int] = None, duration: Optional[float] = None,
+                 duration_max: Optional[float] = None,
+                 duration_unit: Optional[Literal["s", "min", "h", "d", "wk", "mo", "a"]] = None,
+                 frequency: Optional[int] = None, frequency_max: Optional[int] = None,
+                 period: Optional[float] = None, period_max: Optional[float] = None,
+                 period_unit: Optional[Literal["s", "min", "h", "d", "wk", "mo", "a"]] = None,
+                 day_of_week: Optional[List[Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]]] = None,
+                 time_of_day: Optional[List[str]] = None, when: Optional[List[Code]] = None,
+                 offset: Optional[int] = None):
+        self.bounds = bounds
+        self.count = count
+        self.count_max = count_max
+        self.duration = duration
+        self.duration_max = duration_max
+        self.duration_unit = duration_unit
+        self.frequency = frequency
+        self.frequency_max = frequency_max
+        self.period = period
+        self.period_max = period_max
+        self.period_unit = period_unit
+        self.day_of_week = day_of_week
+        self.time_of_day = time_of_day
+        self.when = when
+        self.offset = offset
+
+    def get(self):
+        repeat = {
+            "boundsDuration": self.bounds.get().get("boundsDuration") if isinstance(self.bounds,
+                                                                                    RepeatBounds) else None,
+            "boundsRange": self.bounds.get().get("boundsRange") if isinstance(self.bounds, RepeatBounds) else None,
+            "boundsPeriod": self.bounds.get().get("boundsPeriod") if isinstance(self.bounds, RepeatBounds) else None,
+            "count": self.count if isinstance(self.count, int) and self.count > 0 else None,
+            "countMax": self.count_max if isinstance(self.count_max, int) and self.count_max > 0 else None,
+            "duration": self.duration if isinstance(self.duration, float) else None,
+            "durationMax": self.duration_max if isinstance(self.duration_max, float) else None,
+            "durationUnit": self.duration_unit if self.duration_unit in ["s", "min", "h", "d", "wk", "mo",
+                                                                         "a"] else None,
+            "frequency": self.frequency if isinstance(self.frequency, int) and self.frequency > 0 else None,
+            "frequencyMax": self.frequency_max if isinstance(self.frequency_max,
+                                                             int) and self.frequency_max > 0 else None,
+            "period": self.period if isinstance(self.period, float) else None,
+            "periodMax": self.period_max if isinstance(self.period_max, float) else None,
+            "periodUnit": self.period_unit if self.period_unit in ["s", "min", "h", "d", "wk", "mo",
+                                                                   "a"] else None,
+            "dayOfWeek": [d for d in self.day_of_week if
+                          d in ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]] if isinstance(self.day_of_week,
+                                                                                                list) else None,
+            "timeOfDay": [t for t in self.time_of_day if isinstance(t, str)] if isinstance(self.time_of_day,
+                                                                                           list) else None,
+            "when": [w.get() for w in self.when if isinstance(w, Code)] if isinstance(self.when, list) else None,
+            "offset": self.offset if isinstance(self.offset, int) and self.offset > 0 else None
+        }
+        return {k: v for k, v in repeat.items() if v not in ("", None, [])}
+
+
+class Timing:
+
+    def __init__(self, event: Optional[List[str]] = None, repeat: Optional[Repeat] = None,
+                 code: Optional[CodeableConcept] = None):
+        self.event = event
+        self.repeat = repeat
+        self.code = code
+
+    def get(self):
+        timing = {
+            "event": [e for e in self.event if isinstance(e, str)] if isinstance(self.event, list) else None,
+            "repeat": self.repeat.get() if isinstance(self.repeat, Repeat) else None,
+            "code": self.code.get() if isinstance(self.code, CodeableConcept) else None
+        }
+        return {k: v for k, v in timing.items() if v not in ("", None, [])}
+
+
+class Ratio:
+
+    def __init__(self, numerator: Optional[Quantity] = None, denominator: Optional[Quantity] = None):
+        self.numerator = numerator
+        self.denominator = denominator
+
+    def get(self):
+        ratio = {
+            "numerator": self.numerator.get() if isinstance(self.numerator, Quantity) else None,
+            "denominator": self.denominator.get() if isinstance(self.denominator, Quantity) else None
+        }
+        return {k: v for k, v in ratio.items() if v not in ("", None)}
+
+
+class SampledData:
+
+    def __init__(self, origin: str, period: float, dimensions: int, factor: Optional[float] = None,
+                 lower_limit: Optional[float] = None, upper_limit: Optional[float] = None, data: Optional[str] = None):
+        self.origin = origin
+        self.period = period
+        self.dimensions = dimensions
+        self.factor = factor
+        self.lower_limit = lower_limit
+        self.upper_limit = upper_limit
+        self.data = data
+
+    def get(self):
+        sampled_data = {
+            "origin": self.origin if isinstance(self.origin, str) else None,
+            "period": self.period if isinstance(self.period, float) else None,
+            "factor": self.factor if isinstance(self.factor, float) else None,
+            "lowerLimit": self.lower_limit if isinstance(self.lower_limit, float) else None,
+            "upperLimit": self.upper_limit if isinstance(self.upper_limit, float) else None,
+            "dimensions": self.dimensions if isinstance(self.dimensions, int) and self.dimensions > 0 else None,
+            "data": self.data if isinstance(self.data, str) else None
+        }
+        return {k: v for k, v in sampled_data.items() if v not in ("", None)}
+
+
+class UsageContextValue:
+
+    def __init__(self, value_codeable_concept: Optional[CodeableConcept] = None,
+                 value_quantity: Optional[Quantity] = None, value_range: Optional[Range] = None,
+                 value_reference: Optional[Reference] = None):
+        self.value_codeable_concept = value_codeable_concept
+        self.value_quantity = value_quantity
+        self.value_range = value_range
+        self.value_reference = value_reference
+
+    def get(self):
+        value = {
+            "valueCodeableConcept": self.value_codeable_concept if isinstance(self.value_codeable_concept,
+                                                                              CodeableConcept) else None,
+            "valueQuantity": self.value_quantity if isinstance(self.value_quantity, Quantity) else None,
+            "valueRange": self.value_range if isinstance(self.value_range, Range) else None,
+            "valueReference": self.value_reference if isinstance(self.value_reference, Reference) else None
+        }
+        return {k: v for k, v in value.items() if v not in ("", None)}
+
+
+class UsageContext:
+
+    def __init__(self, code: Coding, value: UsageContextValue):
+        self.code = code
+        self.value = value
+
+    def get(self):
+        context = {
+            "code": self.code if isinstance(self.code, Coding) else None,
+            "valueCodeableConcept": self.value.get().get("valueCodeableConcept") if isinstance(self.value,
+                                                                                               UsageContextValue) else None,
+            "valueQuantity": self.value.get().get("valueQuantity") if isinstance(self.value,
+                                                                                 UsageContextValue) else None,
+            "valueRange": self.value.get().get("valueRange") if isinstance(self.value,
+                                                                           UsageContextValue) else None,
+            "valueReference": self.value.get().get("valueReference") if isinstance(self.value,
+                                                                                   UsageContextValue) else None,
+        }
+        return {k: v for k, v in context.items() if v not in ("", None)}
+
+
+class TriggerDefinitionTiming:
+
+    def __init__(self, timing_timing: Optional[Timing], timing_reference: Optional[Reference] = None,
+                 timing_date: Optional[str] = None, timing_date_time: Optional[str] = None):
+        self.timing_timing = timing_timing
+        self.timing_reference = timing_reference
+        self.timing_date = timing_date
+        self.timing_date_time = timing_date_time
+
+    def get(self):
+        timing = {
+            "timingTiming": self.timing_timing.get() if isinstance(self.timing_timing, Timing) else None,
+            "timingReference": self.timing_reference.get() if isinstance(self.timing_reference, Reference) else None,
+            "timingDate": self.timing_date if isinstance(self.timing_date, str) else None,
+            "timingDateTime": self.timing_date_time if isinstance(self.timing_date_time, str) else None
+        }
+        return {k: v for k, v in timing.items() if v not in ("", None)}
+
+
+class TriggerDefinition:
+
+    def __init__(self, trigger_definition_type: Literal[
+        "named-event", "periodic", "data-changed", "data-added", "data-modified", "data-removed", "data-accessed", "data-access-ended"],
+                 name: Optional[str] = None, timing:Optional[TriggerDefinitionTiming] = None, ):
+        pass

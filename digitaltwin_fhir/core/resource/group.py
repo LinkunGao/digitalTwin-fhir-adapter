@@ -37,12 +37,12 @@ class Characteristic:
     def get(self):
         characteristic = {
             "code": self.code.get() if isinstance(self.code, CodeableConcept) else None,
-            "valueCodeableConcept": self.value.get()["valueCodeableConcept"] if isinstance(self.value,
+            "valueCodeableConcept": self.value.get().get("valueCodeableConcept") if isinstance(self.value,
                                                                                            GroupValue) else None,
-            "valueBoolean": self.value.get()["valueBoolean"] if isinstance(self.value, GroupValue) else None,
-            "valueQuantity": self.value.get()["valueQuantity"] if isinstance(self.value, GroupValue) else None,
-            "valueRange": self.value.get()["valueRange"] if isinstance(self.value, GroupValue) else None,
-            "valueReference": self.value.get()["valueReference"] if isinstance(self.value, GroupValue) else None,
+            "valueBoolean": self.value.get().get("valueBoolean") if isinstance(self.value, GroupValue) else None,
+            "valueQuantity": self.value.get().get("valueQuantity") if isinstance(self.value, GroupValue) else None,
+            "valueRange": self.value.get().get("valueRange") if isinstance(self.value, GroupValue) else None,
+            "valueReference": self.value.get().get("valueReference") if isinstance(self.value, GroupValue) else None,
             "exclude": self.exclude if isinstance(self.exclude, bool) else False,
             "period": self.period.get() if isinstance(self.period, Period) else None
         }
