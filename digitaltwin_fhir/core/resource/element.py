@@ -703,3 +703,17 @@ class TriggerDefinition:
             "condition": self.condition.get() if isinstance(self.condition, Expression) else None
         }
         return {k: v for k, v in trigger_definition.items() if v not in ("", None, [])}
+
+
+class Narrative:
+
+    def __init__(self, status: Literal["generated", "extensions", "additional", "empty"], div: str):
+        self.status = status
+        self.div = div
+
+    def get(self):
+        narrative = {
+            "status": self.status if self.status in ["generated", "extensions", "additional", "empty"] else None,
+            "div": self.div if isinstance(self.div, str) else None
+        }
+        return {k: v for k, v in narrative.items() if v not in ("", None)}

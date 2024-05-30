@@ -1,6 +1,6 @@
 from abc import ABC
 from .abstract_resource import AbstractResource
-from .element import (Meta, Identifier, CodeableConcept, ContactDetail, Reference, UsageContext, RelatedArtifact,
+from .element import (Meta, Identifier, CodeableConcept, ContactDetail, UsageContext, RelatedArtifact,
                       Period, Timing, FHIRSubject, Quantity, Range, TriggerDefinition, Expression, DataRequirement)
 from typing import Optional, List, Literal
 

@@ -3,7 +3,7 @@ from .element import (
     Identifier, HumanName, RelatedArtifact, RepeatBounds, Repeat, Timing, ContactDetail, Ratio, SampledData,
     UsageContext, UsageContextValue, Quantity, FHIRSubject, TriggerDefinition, TriggerDefinitionTiming, DataRequirement,
     DataRequirementSort, DataRequirementDataFilter, DataRequirementCodeFilter, DataRequirementDataFilterValue,
-    Expression
+    Expression, Narrative
 )
 
 from .patient import Patient, Deceased, MultipleBrith, Contact, Communication
@@ -21,3 +21,6 @@ from .plan_definition import (PlanDefinition, PlanDefinitionAction, PlanDefiniti
                               PlanDefinitionActionParticipant, PlanDefinitionActionTiming,
                               PlanDefinitionActionRelatedAction, PlanDefinitionActionRelatedActionOffset,
                               PlanDefinitionActionCondition, PlanDefinitionTarget, PlanDefinitionTargetDetail)
+from .procedure import (Procedure, ProcedurePerformed, ProcedurePerformer, ProcedureFocalDevice)
+from .composition import (Composition, CompositionSection, CompositionEvent, CompositionRelatesTo, CompositionAttester,
+                          CompositionTarget)
