@@ -509,6 +509,150 @@ class UsageContext:
         return {k: v for k, v in context.items() if v not in ("", None)}
 
 
+class FHIRSubject:
+    def __init__(self, subject_codeable_concept: Optional[CodeableConcept] = None,
+                 subject_reference: Optional[Reference] = None):
+        self.subject_codeable_concept = subject_codeable_concept
+        self.subject_reference = subject_reference
+
+    def get(self):
+        subject = {
+            "subjectCodeableConcept": self.subject_codeable_concept.get() if isinstance(self.subject_codeable_concept,
+                                                                                        CodeableConcept) else None,
+            "subjectReference": self.subject_reference.get() if isinstance(self.subject_reference, Reference) else None
+        }
+        return {k: v for k, v in subject.items() if v not in ("", None)}
+
+
+class DataRequirementCodeFilter:
+    def __init__(self, path: Optional[str] = None, search_param: Optional[str] = None, value_set: Optional[str] = None,
+                 code: Optional[List[Coding]] = None):
+        self.path = path
+        self.search_param = search_param
+        self.value_set = value_set
+        self.code = code
+
+    def get(self):
+        code_filter = {
+            "path": self.path if isinstance(self.path, str) else None,
+            "searchParam": self.search_param if isinstance(self.search_param, str) else None,
+            "valueSet": self.value_set if isinstance(self.value_set, str) else None,
+            "code": [c.get() for c in self.code if isinstance(c, Coding)] if isinstance(self.code, list) else None,
+        }
+        return {k: v for k, v in code_filter.items() if v not in ("", None, [])}
+
+
+class DataRequirementDataFilterValue:
+
+    def __init__(self, value_date_time: Optional[str] = None, value_period: Optional[Period] = None,
+                 value_duration: Optional[str] = None):
+        self.value_date_time = value_date_time
+        self.value_period = value_period
+        self.value_duration = value_duration
+
+    def get(self):
+        value = {
+            "valueDateTime": self.value_date_time if isinstance(self.value_date_time, str) else None,
+            "valuePeriod": self.value_period.get() if isinstance(self.value_period, Period) else None,
+            "valueDuration": self.value_duration if isinstance(self.value_duration, str) else None
+        }
+        return {k: v for k, v in value.items() if v not in ("", None)}
+
+
+class DataRequirementDataFilter:
+    def __init__(self, path: Optional[str] = None, search_param: Optional[str] = None,
+                 value: Optional[DataRequirementDataFilterValue] = None):
+        self.path = path
+        self.search_param = search_param
+        self.value = value
+
+    def get(self):
+        code_filter = {
+            "path": self.path if isinstance(self.path, str) else None,
+            "searchParam": self.search_param if isinstance(self.search_param, str) else None,
+            "valueDateTime": self.value.get().get("valueDateTime") if isinstance(self.value,
+                                                                                 DataRequirementDataFilterValue) else None,
+            "valuePeriod": self.value.get().get("valuePeriod") if isinstance(self.value,
+                                                                             DataRequirementDataFilterValue) else None,
+            "valueDuration": self.value.get().get("valueDuration") if isinstance(self.value,
+                                                                                 DataRequirementDataFilterValue) else None,
+        }
+        return {k: v for k, v in code_filter.items() if v not in ("", None)}
+
+
+class DataRequirementSort:
+
+    def __init__(self, path: str, direction: Literal["ascending", "descending"]):
+        self.path = path
+        self.direction = direction
+
+    def get(self):
+        sort = {
+            "path": self.path if isinstance(self.path, str) else None,
+            "direction": self.direction if self.direction in ["ascending", "descending"] else None
+        }
+        return {k: v for k, v in sort.items() if v not in ("", None)}
+
+
+class DataRequirement:
+
+    def __init__(self, data_requirement_type: Code, profile: Optional[List[str]] = None,
+                 subject: Optional[FHIRSubject] = None, must_support: Optional[List[str]] = None,
+                 code_filter: Optional[List[DataRequirementCodeFilter]] = None,
+                 data_filter: Optional[List[DataRequirementDataFilter]] = None, limit: Optional[int] = None,
+                 sort: Optional[List[DataRequirementSort]] = None):
+        self.data_requirement_type = data_requirement_type
+        self.profile = profile
+        self.subject = subject
+        self.must_support = must_support
+        self.code_filter = code_filter
+        self.data_filter = data_filter
+        self.limit = limit
+        self.sort = sort
+
+    def get(self):
+        data_requirement = {
+            "type": self.data_requirement_type.get() if isinstance(self.data_requirement_type, Code) else None,
+            "profile": [p for p in self.profile if isinstance(p, str)] if isinstance(self.profile, list) else None,
+            "subjectCodeableConcept": self.subject.get().get("subjectCodeableConcept") if isinstance(self.subject,
+                                                                                                     FHIRSubject) else None,
+            "subjectReference": self.subject.get().get("subjectReference") if isinstance(self.subject,
+                                                                                         FHIRSubject) else None,
+            "mustSupport": [m for m in self.must_support if isinstance(m, str)] if isinstance(self.must_support,
+                                                                                              list) else None,
+            "codeFilter": [c.get() for c in self.code_filter if isinstance(c, DataRequirementCodeFilter)] if isinstance(
+                self.code_filter, list) else None,
+            "dateFilter": [d.get() for d in self.data_filter if isinstance(d, DataRequirementDataFilter)] if isinstance(
+                self.data_filter, list) else None,
+            "limit": self.limit if isinstance(self.limit, int) and self.limit > 0 else None,
+            "sort": [s.get() for s in self.sort if isinstance(s, DataRequirementSort)] if isinstance(self.sort,
+                                                                                                     list) else None
+        }
+        return {k: v for k, v in data_requirement.items() if v not in ("", None, [])}
+
+
+class Expression:
+
+    def __init__(self, language: Literal["text/cql", "text/fhirpath", "application/x-fhir-query", "etc"],
+                 description: Optional[str] = None, name: Optional[str] = None, expression: Optional[str] = None,
+                 reference: Optional[str] = None):
+        self.language = language
+        self.description = description
+        self.name = name
+        self.expression = expression
+        self.reference = reference
+
+    def get(self):
+        expression = {
+            "description": self.description if isinstance(self.description, str) else None,
+            "name": self.name if isinstance(self.name, str) else None,
+            "language": self.language if isinstance(self.language, str) else None,
+            "expression": self.expression if isinstance(self.expression, str) else None,
+            "reference": self.reference if isinstance(self.reference, str) else None,
+        }
+        return {k: v for k, v in expression.items() if v not in ("", None)}
+
+
 class TriggerDefinitionTiming:
 
     def __init__(self, timing_timing: Optional[Timing], timing_reference: Optional[Reference] = None,
@@ -532,5 +676,30 @@ class TriggerDefinition:
 
     def __init__(self, trigger_definition_type: Literal[
         "named-event", "periodic", "data-changed", "data-added", "data-modified", "data-removed", "data-accessed", "data-access-ended"],
-                 name: Optional[str] = None, timing:Optional[TriggerDefinitionTiming] = None, ):
-        pass
+                 name: Optional[str] = None, timing: Optional[TriggerDefinitionTiming] = None,
+                 data: Optional[List[DataRequirement]] = None, condition: Optional[Expression] = None):
+        self.trigger_definition_type = trigger_definition_type
+        self.name = name
+        self.timing = timing
+        self.data = data
+        self.condition = condition
+
+    def get(self):
+        trigger_definition = {
+            "type": self.trigger_definition_type if self.trigger_definition_type in [
+                "named-event", "periodic", "data-changed", "data-added", "data-modified", "data-removed",
+                "data-accessed", "data-access-ended"] else None,
+            "name": self.name if isinstance(self.name, str) else None,
+            "timingTiming": self.timing.get().get("timingTiming") if isinstance(self.timing,
+                                                                                TriggerDefinitionTiming) else None,
+            "timingReference": self.timing.get().get("timingReference") if isinstance(self.timing,
+                                                                                      TriggerDefinitionTiming) else None,
+            "timingDate": self.timing.get().get("timingDate") if isinstance(self.timing,
+                                                                            TriggerDefinitionTiming) else None,
+            "timingDateTime": self.timing.get().get("timingDateTime") if isinstance(self.timing,
+                                                                                    TriggerDefinitionTiming) else None,
+            "data": [d.get() for d in self.data if isinstance(d, DataRequirement)] if isinstance(self.data,
+                                                                                                 list) else None,
+            "condition": self.condition.get() if isinstance(self.condition, Expression) else None
+        }
+        return {k: v for k, v in trigger_definition.items() if v not in ("", None, [])}

@@ -1,7 +1,9 @@
 from .element import (
     Code, Coding, CodeableConcept, ContactPoint, Reference, Address, Attachment, Author, Annotation, Period, Profile,
     Identifier, HumanName, RelatedArtifact, RepeatBounds, Repeat, Timing, ContactDetail, Ratio, SampledData,
-    UsageContext, UsageContextValue, Quantity
+    UsageContext, UsageContextValue, Quantity, FHIRSubject, TriggerDefinition, TriggerDefinitionTiming, DataRequirement,
+    DataRequirementSort, DataRequirementDataFilter, DataRequirementCodeFilter, DataRequirementDataFilterValue,
+    Expression
 )
 
 from .patient import Patient, Deceased, MultipleBrith, Contact, Communication
