@@ -16,3 +16,8 @@ from .encounter import (Encounter, EncounterLocation, EncounterHospitalization, 
                         EncounterDiagnosis, EncounterHistory)
 from .imaging_study import ImagingStudy, ImagingStudySeries, ImagingStudyInstance, ImagingStudyPerformer
 from .endpoint import Endpoint
+from .plan_definition import (PlanDefinition, PlanDefinitionAction, PlanDefinitionGoal,
+                              PlanDefinitionActionDynamicValue, PlanDefinitionActionDefinition,
+                              PlanDefinitionActionParticipant, PlanDefinitionActionTiming,
+                              PlanDefinitionActionRelatedAction, PlanDefinitionActionRelatedActionOffset,
+                              PlanDefinitionActionCondition, PlanDefinitionTarget, PlanDefinitionTargetDetail)
