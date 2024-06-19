@@ -77,6 +77,7 @@ class Group(AbstractResource, ABC):
                  managing_entity: Optional[Reference] = None, characteristic: Optional[List[Characteristic]] = None,
                  member: Optional[List[GroupMember]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Group"
         self.active = active
         self.group_type = group_type
         self.actual = actual
@@ -89,6 +90,7 @@ class Group(AbstractResource, ABC):
 
     def get(self):
         group = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

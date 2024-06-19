@@ -13,7 +13,7 @@ class AbstractOperator(ABC):
         pass
 
     @abstractmethod
-    def create(self):
+    def create(self, resource, resource_type):
         pass
 
     @abstractmethod
@@ -35,8 +35,8 @@ class Operator(AbstractOperator):
     def load(self):
         return self.load_class(self, self.core)
 
-    def create(self):
-        return self.create_class(self, self.core)
+    def create(self, resource, resource_type):
+        return self.create_class(self, self.core, resource, resource_type)
 
     def update(self):
         pass

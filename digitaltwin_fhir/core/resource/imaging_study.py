@@ -94,6 +94,7 @@ class ImagingStudy(AbstractResource, ABC):
                  reason_reference: Optional[List[Reference]] = None, note: Optional[List[Annotation]] = None,
                  description: Optional[str] = None, series: Optional[List[ImagingStudySeries]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "ImagingStudy"
         self.status = status
         self.subject = subject
         self.modality = modality
@@ -116,6 +117,7 @@ class ImagingStudy(AbstractResource, ABC):
 
     def get(self):
         imagingstudy = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

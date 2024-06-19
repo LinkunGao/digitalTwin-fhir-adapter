@@ -77,6 +77,7 @@ class Procedure(AbstractResource, ABC):
                  focal_device: Optional[List[ProcedureFocalDevice]] = None,
                  used_reference: Optional[List[Reference]] = None, used_code: Optional[List[CodeableConcept]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Procedure"
         self.instantiates_canonical = instantiates_canonical
         self.instantiates_uri = instantiates_uri
         self.based_on = based_on
@@ -107,6 +108,7 @@ class Procedure(AbstractResource, ABC):
 
     def get(self):
         procedure = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

@@ -13,6 +13,7 @@ class Endpoint(AbstractResource, ABC):
                  period: Optional[Period] = None, payload_type: Optional[List[CodeableConcept]] = None,
                  payload_mime_type: Optional[List[Code]] = None, header: Optional[List[str]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Endpoint"
         self.status = status
         self.connection_type = connection_type
         self.address = address
@@ -26,6 +27,7 @@ class Endpoint(AbstractResource, ABC):
 
     def get(self):
         endpoint = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,
