@@ -27,10 +27,11 @@ class Test:
                           name=[HumanName(use="usual", text="test li",
                                           family="li",
                                           given=["test"])], birth_date=transform_value(datetime.date(2019, 1, 1)))
-        self.adapter.operator().create(resource=patient).save()
+        await self.adapter.operator().create(resource=patient).save()
 
     async def test_measurements(self):
-        self.adapter.loader().load_sparc_dataset_primary_measurements("./dataset/dataset-sparc").generate_resources()
+        await self.adapter.loader().load_sparc_dataset_primary_measurements(
+            "./dataset/dataset-sparc").generate_resources()
 
 
 if __name__ == '__main__':
