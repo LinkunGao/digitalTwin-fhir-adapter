@@ -135,6 +135,7 @@ class Encounter(AbstractResource, ABC):
                  location: Optional[List[EncounterLocation]] = None, service_provider: Optional[Reference] = None,
                  part_of: Optional[Reference] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Encounter"
         self.status = status
         self.encounter_class = encounter_class
         self.status_history = status_history
@@ -160,6 +161,7 @@ class Encounter(AbstractResource, ABC):
 
     def get(self):
         encounter = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

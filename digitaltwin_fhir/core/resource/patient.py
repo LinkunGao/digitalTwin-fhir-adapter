@@ -93,7 +93,8 @@ class Link:
 
 class Patient(AbstractResource, ABC):
 
-    def __init__(self, meta: Optional[Meta] = None, identifier: Optional[List[Identifier]] = None,
+    def __init__(self, meta: Optional[Meta] = None,
+                 identifier: Optional[List[Identifier]] = None,
                  active: Optional[bool] = None, name: Optional[List[HumanName]] = None,
                  telecom: Optional[List[ContactPoint]] = None,
                  gender: Optional[Literal["male", "female", "other", "unknown", ""]] = None,
@@ -105,6 +106,7 @@ class Patient(AbstractResource, ABC):
                  general_practitioner: Optional[List[Reference]] = None,
                  managing_organization: Optional[Reference] = None, link: Optional[List[Link]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Patient"
         self.active = active
         self.name = name
         self.telecom = telecom
@@ -123,6 +125,7 @@ class Patient(AbstractResource, ABC):
 
     def get(self):
         patient = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,
@@ -132,16 +135,19 @@ class Patient(AbstractResource, ABC):
                         isinstance(t, ContactPoint)] if isinstance(self.telecom, list) else None,
             "gender": self.gender if self.gender in ["male", "female", "other", "unknown"] else None,
             "birthDate": self.birth_date,
-            "deceasedBoolean": self.deceased.get().get("deceasedBoolean") if isinstance(self.deceased, Deceased) else None,
+            "deceasedBoolean": self.deceased.get().get("deceasedBoolean") if isinstance(self.deceased,
+                                                                                        Deceased) else None,
             "deceasedDateTime": self.deceased.get().get("deceasedDateTime") if isinstance(self.deceased,
-                                                                                      Deceased) else None,
+                                                                                          Deceased) else None,
             "address": [a.get() for a in self.address if isinstance(a, Address)] if isinstance(self.address,
                                                                                                list) else None,
             "maritalStatus": self.marital_status.get() if isinstance(self.marital_status, CodeableConcept) else None,
-            "multipleBirthBoolean": self.multiple_brith.get().get("multipleBirthBoolean") if isinstance(self.multiple_brith,
-                                                                                                    MultipleBrith) else None,
-            "multipleBirthInteger": self.multiple_brith.get().get("multipleBirthInteger") if isinstance(self.multiple_brith,
-                                                                                                    MultipleBrith) else None,
+            "multipleBirthBoolean": self.multiple_brith.get().get("multipleBirthBoolean") if isinstance(
+                self.multiple_brith,
+                MultipleBrith) else None,
+            "multipleBirthInteger": self.multiple_brith.get().get("multipleBirthInteger") if isinstance(
+                self.multiple_brith,
+                MultipleBrith) else None,
             "photo": [p.get() for p in self.photo if isinstance(p, Attachment)] if isinstance(self.photo,
                                                                                               list) else None,
             "contact": [c.get() for c in self.contact if isinstance(c, Contact)] if isinstance(self.contact,

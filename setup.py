@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 VERSION = '1.0.0'
-DESCRIPTION = "digitaltwin_fhir"
+DESCRIPTION = "digitaltwin_on_fhir"
 LONG_DESCRIPTION = "A package for fhir adapter in digital twins platform."
 
 setup(
     # the name must match the package name - verysimpletest
-    name="digitaltwin_fhir",
+    name="digitaltwin_on_fhir",
     version=VERSION,
     author="LinkunGao",
     author_email="gaolinkun123@gmail.com",

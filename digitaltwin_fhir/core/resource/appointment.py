@@ -49,6 +49,7 @@ class Appointment(AbstractResource, ABC):
                  patient_instruction: Optional[str] = None, based_on: Optional[List[Reference]] = None,
                  requested_period: Optional[List[Period]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Appointment"
         self.status = status
         self.cancelation_reason = cancelation_reason
         self.service_category = service_category
@@ -73,6 +74,7 @@ class Appointment(AbstractResource, ABC):
 
     def get(self):
         appointment = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

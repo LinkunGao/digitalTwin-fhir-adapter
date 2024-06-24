@@ -62,6 +62,7 @@ class ResearchStudy(AbstractResource, ABC):
                  reason_stopped: Optional[CodeableConcept] = None, note: Optional[List[Annotation]] = None,
                  arm: Optional[List[Arm]] = None, objective: Optional[List[ResearchObjective]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "ResearchStudy"
         self.title = title
         self.protocol = protocol
         self.part_of = part_of
@@ -88,6 +89,7 @@ class ResearchStudy(AbstractResource, ABC):
 
     def get(self):
         researchstudy = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

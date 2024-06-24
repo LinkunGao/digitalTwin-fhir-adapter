@@ -9,17 +9,17 @@ class Test:
 
     async def test_load_bundle(self):
         # TODO 1: test load bundle dataset
-        await self.adapter.loader().import_dataset('./dataset')
+        await self.adapter.loader().load_fhir_bundle('./dataset/dataset-fhir-bundles')
         # TODO 3:
         # await adapter.load_dicom_dataset('')
 
     async def test_search(self):
         # TODO 2: test search Patient by name
-        t = await self.adapter.create().create_resource("Patient", "d557ac68-f365-0718-c945-8722ec109c07")
-        print(t)
-        p = await self.adapter.search().search_resource('Patient', 'd557ac68-f365-0718-c945-8722ec109c07')
+        # t = await self.adapter.create().create_resource("Patient", "d557ac68-f365-0718-c945-8722ec109c07")
+        # print(t)
+        p = await self.adapter.search().search_resource_async('Patient', 'd557ac68-f365-0718-c945-8722ec109c07')
         print(p)
-        ps = await self.adapter.search().search_resources('Patient')
+        ps = await self.adapter.search().search_resources_async('Patient')
         print(ps)
 
         patient = Patient(active=True, identifier=[
@@ -27,13 +27,13 @@ class Test:
                           name=[HumanName(use="usual", text="test li",
                                           family="li",
                                           given=["test"])], birth_date=transform_value(datetime.date(2019, 1, 1)))
-        print(patient.get())
+        self.adapter.operator().create(resource=patient).save()
 
-
-
+    async def test_measurements(self):
+        self.adapter.loader().load_sparc_dataset_primary_measurements("./dataset/dataset-sparc").generate_resources()
 
 
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(test.test_search())
+    loop.run_until_complete(test.test_measurements())

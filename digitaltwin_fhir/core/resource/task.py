@@ -60,6 +60,7 @@ class Task(AbstractResource, ABC):
                  task_input: Optional[List[TaskInputOutput]] = None,
                  task_output: Optional[List[TaskInputOutput]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Task"
         self.instantiates_canonical = instantiates_canonical
         self.instantiates_uri = instantiates_uri
         self.based_on = based_on
@@ -93,6 +94,7 @@ class Task(AbstractResource, ABC):
 
     def get(self):
         task = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

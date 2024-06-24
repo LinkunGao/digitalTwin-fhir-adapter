@@ -119,6 +119,7 @@ class Composition(AbstractResource, ABC):
                  relates_to: Optional[List[CompositionRelatesTo]] = None,
                  event: Optional[List[CompositionEvent]] = None, section: Optional[List[CompositionSection]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Composition"
         self.status = status
         self.composition_type = composition_type
         self.category = category
@@ -136,6 +137,7 @@ class Composition(AbstractResource, ABC):
 
     def get(self):
         composition = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

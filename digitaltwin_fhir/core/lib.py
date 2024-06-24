@@ -1,6 +1,7 @@
 from fhirpy import AsyncFHIRClient, SyncFHIRClient
 from .operator import Operator
 from .search import Search
+from .loader import Loader
 from .nzbase.Patient import NzPatient
 from abc import ABC, abstractmethod
 
@@ -28,6 +29,11 @@ class AbstractAdapter(ABC):
 
     @property  # pragma no cover
     @abstractmethod
+    def loader_class(self):
+        pass
+
+    @property  # pragma no cover
+    @abstractmethod
     def search_class(self):
         pass
 
@@ -35,16 +41,16 @@ class AbstractAdapter(ABC):
 class Adapter(AbstractAdapter, ABC):
     operator_class = Operator
     search_class = Search
+    loader_class = Loader
 
     def __init__(self, url, authorization='Bearer TOKEN'):
         super().__init__(url, authorization)
 
-    def loader(self):
-        return self.operator_class(self).load()
-
     def search(self):
         return self.search_class(self)
 
-    def create(self):
-        return self.operator_class(self).create()
+    def operator(self):
+        return self.operator_class(self)
 
+    def loader(self):
+        return self.loader_class(self, self.operator())

@@ -34,6 +34,7 @@ class Practitioner(AbstractResource, ABC):
                  qualification: Optional[List[Qualification]] = None,
                  communication: Optional[List[CodeableConcept]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "Practitioner"
         self.active = active
         self.name = name
         self.telecom = telecom
@@ -46,6 +47,7 @@ class Practitioner(AbstractResource, ABC):
 
     def get(self):
         practitioner = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,

@@ -328,6 +328,7 @@ class PlanDefinition(AbstractResource, ABC):
                  related_artifact: Optional[List[RelatedArtifact]] = None, library: Optional[List[str]] = None,
                  goal: Optional[List[PlanDefinitionGoal]] = None, action: Optional[List[PlanDefinitionAction]] = None):
         super().__init__(meta, identifier)
+        self._resource_type = "PlanDefinition"
         self.url = url
         self.version = version
         self.name = name
@@ -361,6 +362,7 @@ class PlanDefinition(AbstractResource, ABC):
 
     def get(self):
         plan_definition = {
+            "resourceType": self._resource_type,
             "meta": self.meta.get() if isinstance(self.meta, Meta) else None,
             "identifier": [i.get() for i in self.identifier if
                            isinstance(i, Identifier)] if isinstance(self.identifier, list) else None,
