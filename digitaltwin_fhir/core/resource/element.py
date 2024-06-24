@@ -87,7 +87,7 @@ class Identifier:
 
     def get(self):
         identifier = {
-            "use": self.use.get() if isinstance(self.use, Code) else None,
+            "use": self.use.get() if isinstance(self.use, Code) and self.use.get() in ["usual", "official", "temp", "secondary", "old"] else None,
             "system": self.system if isinstance(self.system, str) else None,
             "value": self.value if isinstance(self.value, str) else None,
             "period": self.period.get() if isinstance(self.period, Period) else None,
