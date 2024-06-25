@@ -1,3 +1,4 @@
+from .abstract_resource import AbstractResource
 from .element import (
     Code, Coding, CodeableConcept, ContactPoint, Reference, Address, Attachment, Author, Annotation, Period, Profile,
     Identifier, HumanName, RelatedArtifact, RepeatBounds, Repeat, Timing, ContactDetail, Ratio, SampledData,
