@@ -42,9 +42,10 @@ class Create(AbstractOperatorBase, ABC):
         try:
             identifier = self.resource_json["identifier"]
             resource_type = self.resource_json["resourceType"]
-            is_exist = await self._is_resource_exist(resource_type, identifier[0]["value"])
-            if is_exist:
-                return
+            resource = await self._is_resource_exist(resource_type, identifier[0]["value"])
+            if resource is not False:
+                self.resource = resource
+                return self.resource
             self.resource = self.core.async_client.resource(resource_type)
             for k, v in self.resource_json.items():
                 self.resource[k] = v
@@ -55,13 +56,9 @@ class Create(AbstractOperatorBase, ABC):
         return self.resource
 
     async def _is_resource_exist(self, resource_type, identifier):
-        resources = await self.core.search().search_resource_async(resource_type=resource_type, identifier=identifier)
+        resources = await self.core.search().search_resources_async(resource_type=resource_type, identifier=identifier)
         if resources is not None and len(resources) > 0:
             print(f"the {resource_type} already exist! identifier: {identifier}")
-            return True
+            return resources[0]
         return False
 
-
-class Measurements(AbstractOperatorBase, ABC):
-    def __init__(self, operator, core, dataset_path):
-        super().__init__(operator, core)

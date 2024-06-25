@@ -169,7 +169,7 @@ class Encounter(AbstractResource, ABC):
                                                      "finished", "cancelled"] else None,
             "statusHistory": [s.get() for s in self.status_history if isinstance(s, EncounterHistory)] if isinstance(
                 self.status_history, list) else None,
-            "class": self.encounter_class if isinstance(self.encounter_class, Coding) else None,
+            "class": self.encounter_class.get() if isinstance(self.encounter_class, Coding) else None,
             "classHistory": [c.get() for c in self.class_history if isinstance(c, EncounterHistory)] if isinstance(
                 self.class_history, list) else None,
             "type": [t.get() for t in self.encounter_type if isinstance(t, CodeableConcept)] if isinstance(
