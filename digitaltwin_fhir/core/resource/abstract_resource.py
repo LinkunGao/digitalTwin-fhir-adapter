@@ -18,5 +18,5 @@ class AbstractResource(ABC):
         pass
 
     @abstractmethod
-    def convert(self):
+    def convert(self, fhirpy_resource):
         pass

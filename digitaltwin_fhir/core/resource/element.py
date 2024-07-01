@@ -7,7 +7,11 @@ class Code:
         self.value = value if isinstance(value, str) else None
 
     def get(self):
-        return self.value
+        return self.value if isinstance(self.value, str) else None
+
+    def convert(self, fhirpy_code):
+        self.value = fhirpy_code
+        return self
 
 
 class Coding:
@@ -30,6 +34,16 @@ class Coding:
         }
         return {k: v for k, v in coding.items() if v not in ("", None)}
 
+    def convert(self, fhirpy_coding):
+        if fhirpy_coding is None:
+            return None
+        self.system = fhirpy_coding.get("system")
+        self.version = fhirpy_coding.get("version")
+        self.code = Code().convert(fhirpy_coding.get("code"))
+        self.display = fhirpy_coding.get("display")
+        self.user_selected = fhirpy_coding.get("userSelected")
+        return self
+
 
 class CodeableConcept:
 
@@ -46,6 +60,13 @@ class CodeableConcept:
 
         return {k: v for k, v in codeableconcept.items() if v not in ("", None, [])}
 
+    def convert(self, fhirpy_codeable):
+        if fhirpy_codeable is None:
+            return None
+        self.codings = [Coding().convert(c) for c in fhirpy_codeable.get("coding", []) if c is not None] or None
+        self.text = fhirpy_codeable.get("text")
+        return self
+
 
 class Period:
 
@@ -59,6 +80,13 @@ class Period:
             "end": self.end if isinstance(self.end, str) else None
         }
         return {k: v for k, v in period.items() if v not in ("", None)}
+
+    def convert(self, fhirpy_period):
+        if fhirpy_period is None:
+            return None
+        self.start = fhirpy_period.get("start")
+        self.end = fhirpy_period.get("end")
+        return self
 
 
 class Reference:
@@ -74,6 +102,13 @@ class Reference:
         }
         return {k: v for k, v in reference.items() if v not in ("", None)}
 
+    def convert(self, fhirpy_reference):
+        if fhirpy_reference is None:
+            return None
+        self.reference = fhirpy_reference.get("reference")
+        self.display = fhirpy_reference.get("display")
+        return self
+
 
 class Identifier:
 
@@ -87,7 +122,8 @@ class Identifier:
 
     def get(self):
         identifier = {
-            "use": self.use.get() if isinstance(self.use, Code) and self.use.get() in ["usual", "official", "temp", "secondary", "old"] else None,
+            "use": self.use.get() if isinstance(self.use, Code) and self.use.get() in ["usual", "official", "temp",
+                                                                                       "secondary", "old"] else None,
             "system": self.system if isinstance(self.system, str) else None,
             "value": self.value if isinstance(self.value, str) else None,
             "period": self.period.get() if isinstance(self.period, Period) else None,
@@ -95,6 +131,16 @@ class Identifier:
         }
 
         return {k: v for k, v in identifier.items() if v not in ("", None)}
+
+    def convert(self, fhirpy_identifier):
+        if fhirpy_identifier is None:
+            return None
+        self.use = fhirpy_identifier.get("use")
+        self.system = fhirpy_identifier.get("system")
+        self.value = fhirpy_identifier.get("value")
+        self.period = Period().convert(fhirpy_identifier.get("period"))
+        self.assigner = Reference().convert(fhirpy_identifier.get("assigner"))
+        return self
 
 
 class Profile:
@@ -108,14 +154,29 @@ class Profile:
 
 class Meta:
 
-    def __init__(self, profile: List[Profile] = None):
+    def __init__(self, version_id: str = "", last_updated: str = "", source: str = "", profile: List[Profile] = None):
+        self.version_id = version_id
+        self.last_updated = last_updated
+        self.source = source
         self.profile = profile
 
     def get(self):
         meta = {
+            "versionId": self.version_id if isinstance(self.version_id, str) else None,
+            "lastUpdated": self.last_updated if isinstance(self.last_updated, str) else None,
+            "source": self.source if isinstance(self.source, str) else None,
             "profile": [p for p in self.profile if isinstance(p, Profile)] if isinstance(self.profile, list) else None
         }
         return {k: v for k, v in meta.items() if v not in ("", None, [])}
+
+    def convert(self, fhirpy_meta):
+        if fhirpy_meta is None:
+            return None
+        self.version_id = fhirpy_meta.get("versionId")
+        self.last_updated = fhirpy_meta.get("lastUpdated")
+        self.source = fhirpy_meta.get("source")
+        self.profile = [Profile(url=p) for p in fhirpy_meta.get("profile", []) if p is not None] or None
+        return self
 
 
 class HumanName:
@@ -318,6 +379,13 @@ class Author:
         }
         return {k: v for k, v in author.items() if v not in ("", None)}
 
+    def convert(self, fhirpy_author):
+        if fhirpy_author is None:
+            return None
+        self.author_reference = Reference().convert(fhirpy_author.get("authorReference"))
+        self.author_string = fhirpy_author.get("authorString")
+        return self
+
 
 class Annotation:
 
@@ -334,6 +402,15 @@ class Annotation:
             "text": self.text if isinstance(self.text, str) else None
         }
         return {k: v for k, v in annotation.items() if v not in ("", None)}
+
+    def convert(self, fhirpy_annotation):
+        if fhirpy_annotation is None:
+            return None
+        self.author = Author().convert({"authorReference": fhirpy_annotation.get("authorReference"),
+                                        "authorString": fhirpy_annotation.get("authorString")})
+        self.time = fhirpy_annotation.get("time")
+        self.text = fhirpy_annotation.get("text")
+        return self
 
 
 class RepeatBounds:
