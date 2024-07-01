@@ -1,8 +1,9 @@
 import asyncio
 from digitaltwin_fhir.core import Adapter, transform_value
-from digitaltwin_fhir.core.resource import Patient, Identifier, Code, HumanName, Practitioner
+from digitaltwin_fhir.core.resource import Patient, Identifier, Code, HumanName, Practitioner, ImagingStudy
 import datetime
 from utils import tools
+from pprint import pprint
 
 
 class Test:
@@ -43,9 +44,12 @@ class Test:
         ))
         await measurements.generate_resources()
 
+    async def test_search_dataset(self):
+        a = await self.adapter.search().get_dataset_information(dataset_identifier="21e7de6e-01bc-11ef-878e-484d7e9beb16")
+        pprint(a)
 
 
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(test.test_measurements())
+    loop.run_until_complete(test.test_search_dataset())
