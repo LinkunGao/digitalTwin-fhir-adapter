@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.0.1'
+VERSION = '1.0.3'
 DESCRIPTION = "digitaltwin_on_fhir"
 LONG_DESCRIPTION = "A package for fhir adapter in digital twins platform."
 

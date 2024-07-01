@@ -17,6 +17,13 @@ class ImagingStudyPerformer:
 
         return {k: v for k, v in performer.items() if v not in ("", None)}
 
+    def convert(self, fhirpy_performer):
+        if fhirpy_performer is None:
+            return None
+        self.actor = Reference().convert(fhirpy_performer.get("actor"))
+        self.function = CodeableConcept().convert(fhirpy_performer.get("function"))
+        return self
+
 
 class ImagingStudyInstance:
 
@@ -34,6 +41,15 @@ class ImagingStudyInstance:
             "title": self.title if isinstance(self.title, str) else None
         }
         return {k: v for k, v in instance.items() if v not in ("", None)}
+
+    def convert(self, fhirpy_instance):
+        if fhirpy_instance is None:
+            return None
+        self.uid = fhirpy_instance.get("uid")
+        self.sop_class = Coding().convert(fhirpy_instance.get("sopClass"))
+        self.number = fhirpy_instance.get("number")
+        self.title = fhirpy_instance.get("title")
+        return self
 
 
 class ImagingStudySeries:
@@ -78,6 +94,26 @@ class ImagingStudySeries:
                 self.instance, list) else None
         }
         return {k: v for k, v in series.items() if v not in ("", None, [])}
+
+    def convert(self, fhirpy_series):
+        if fhirpy_series is None:
+            return None
+        self.uid = fhirpy_series.get("uid")
+        self.number = fhirpy_series.get("number")
+        self.modality = Coding().convert(fhirpy_series.get("modality"))
+        self.description = fhirpy_series.get("description")
+        self.number_of_instances = fhirpy_series.get("numberOfInstances")
+        self.endpoint = [Reference().convert(e) for e in fhirpy_series.get("endpoint", []) if e is not None] or None
+        self.body_site = Coding().convert(fhirpy_series.get("bodySite"))
+        self.laterality = Coding().convert(fhirpy_series.get("laterality"))
+        self.specimen = [Reference().convert(s) for s in fhirpy_series.get("specimen", []) if s is not None] or None
+        self.started = fhirpy_series.get("started")
+        self.performer = [ImagingStudyPerformer(Reference()).convert(p) for p in fhirpy_series.get("performer", []) if
+                          p is not None] or None
+        self.instance = [ImagingStudyInstance("", Coding()).convert(i) for i in fhirpy_series.get("instance", []) if
+                         i is not None] or None
+
+        return None
 
 
 class ImagingStudy(AbstractResource, ABC):
@@ -147,7 +183,7 @@ class ImagingStudy(AbstractResource, ABC):
             "location": self.location.get() if isinstance(self.location, Reference) else None,
             "reasonCode": [r.get() for r in self.reason_code if isinstance(r, CodeableConcept)] if isinstance(
                 self.reason_code, list) else None,
-            "reasonReference": [r.get() for r in self.reason_reference if isinstance(r, CodeableConcept)] if isinstance(
+            "reasonReference": [r.get() for r in self.reason_reference if isinstance(r, Reference)] if isinstance(
                 self.reason_reference, list) else None,
             "note": [n.get() for n in self.note if isinstance(n, Annotation)] if isinstance(self.note, list) else None,
             "description": self.description if isinstance(self.description, str) else None,
@@ -157,5 +193,35 @@ class ImagingStudy(AbstractResource, ABC):
 
         return {k: v for k, v in imagingstudy.items() if v not in ("", None, [])}
 
-    def convert(self):
-        pass
+    def convert(self, fhirpy_resource):
+        if fhirpy_resource is None:
+            return None
+        self.meta = Meta().convert(fhirpy_resource.get("meta"))
+        self.identifier = [Identifier().convert(i) for i in fhirpy_resource.get("identifier", []) if
+                           i is not None] or None
+        self.status = fhirpy_resource.get("status")
+        self.modality = [Coding().convert(c) for c in fhirpy_resource.get("modality", []) if c is not None] or None
+        self.subject = Reference().convert(fhirpy_resource.get("subject"))
+        self.encounter = Reference().convert(fhirpy_resource.get("encounter"))
+        self.started = fhirpy_resource.get("started")
+        self.based_on = [Reference().convert(b) for b in fhirpy_resource.get("basedOn", []) if
+                         b is not None] or None
+        self.referrer = Reference().convert(fhirpy_resource.get("referrer"))
+        self.interpreter = [Reference().convert(i) for i in fhirpy_resource.get("interpreter", []) if
+                            i is not None] or None
+        self.endpoint = [Reference().convert(e) for e in fhirpy_resource.get("endpoint", []) if e is not None] or None
+        self.number_of_series = fhirpy_resource.get("numberOfSeries")
+        self.number_of_instances = fhirpy_resource.get("numberOfInstances")
+        self.procedure_reference = Reference().convert(fhirpy_resource.get("procedureReference"))
+        self.procedure_code = [CodeableConcept().convert(c) for c in fhirpy_resource.get("procedureCode", []) if
+                               c is not None] or None
+        self.location = Reference().convert(fhirpy_resource.get("location"))
+        self.reason_code = [CodeableConcept().convert(c) for c in fhirpy_resource.get("reasonCode", []) if
+                            c is not None] or None
+        self.reason_reference = [Reference().convert(c) for c in fhirpy_resource.get("reasonReference", []) if
+                                 c is not None] or None
+        self.note = [Annotation("").convert(a) for a in fhirpy_resource.get("note", []) if a is not None] or None
+        self.description = fhirpy_resource.get("description")
+        self.series = [ImagingStudySeries("", Coding()).convert(s) for s in fhirpy_resource.get("series") if
+                       s is not None] or None
+        return self

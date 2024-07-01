@@ -101,7 +101,7 @@ class Group(AbstractResource, ABC):
             "code": self.code.get() if isinstance(self.code, CodeableConcept) else None,
             "name": self.name if isinstance(self.name, str) else None,
             "quantity": self.quantity if isinstance(self.quantity, int) and self.quantity > 0 else None,
-            "managing_entity": self.managing_entity.get() if isinstance(self.managing_entity, Reference) else None,
+            "managingEntity": self.managing_entity.get() if isinstance(self.managing_entity, Reference) else None,
             "characteristic": [c.get() for c in self.characteristic if isinstance(c, Characteristic)] if isinstance(
                 self.characteristic, list) else None,
             "member": [m.get() for m in self.member if isinstance(m, GroupMember)] if isinstance(self.member,
