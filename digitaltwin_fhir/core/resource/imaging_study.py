@@ -20,7 +20,7 @@ class ImagingStudyPerformer:
 
 class ImagingStudyInstance:
 
-    def __init__(self, uid: str, sop_class: Coding, number: Optional[int], title: Optional[str]):
+    def __init__(self, uid: str, sop_class: Coding, number: Optional[int] = None, title: Optional[str] = None):
         self.uid = uid
         self.sop_class = sop_class
         self.number = number

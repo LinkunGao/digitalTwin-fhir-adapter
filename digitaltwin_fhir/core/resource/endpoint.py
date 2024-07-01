@@ -7,11 +7,17 @@ from typing import Optional, List, Literal
 class Endpoint(AbstractResource, ABC):
 
     def __init__(self, status: Literal["active", "suspended", "error", "off", "entered-in-error", "test"],
-                 connection_type: Coding, address: str, meta: Optional[Meta] = None,
+                 connection_type: Coding, address: str, payload_type: List[CodeableConcept],
+                 meta: Optional[Meta] = None,
                  identifier: Optional[List[Identifier]] = None, name: Optional[str] = None,
                  managing_organization: Optional[Reference] = None, contact: Optional[List[ContactPoint]] = None,
-                 period: Optional[Period] = None, payload_type: Optional[List[CodeableConcept]] = None,
+                 period: Optional[Period] = None,
                  payload_mime_type: Optional[List[Code]] = None, header: Optional[List[str]] = None):
+        """
+        :param status: active | suspended | error | off | entered-in-error | test
+        :param connection_type: https://hl7.org/fhir/R4/valueset-endpoint-connection-type.html#expansion
+        :param payload_type: https://hl7.org/fhir/R4/valueset-endpoint-payload-type.html
+        """
         super().__init__(meta, identifier)
         self._resource_type = "Endpoint"
         self.status = status
@@ -51,4 +57,3 @@ class Endpoint(AbstractResource, ABC):
 
     def convert(self):
         pass
-

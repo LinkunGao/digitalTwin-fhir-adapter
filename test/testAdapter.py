@@ -44,6 +44,7 @@ class Test:
         await measurements.generate_resources()
 
 
+
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
