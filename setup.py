@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 DESCRIPTION = "digitaltwin_on_fhir"
 LONG_DESCRIPTION = "A package for fhir adapter in digital twins platform."
 
@@ -17,7 +17,9 @@ setup(
     install_requires=[
         "fhirpy>=1.4.2",
         "pydicom>=2.4.3",
-        "pathlib>=1.0.1"
+        "pathlib>=1.0.1",
+        "pandas>=2.2.2",
+        "openpyxl>=3.1.4"
     ],
     keywords=['digitaltwin', 'fhir', 'python'],
     classifiers=[
