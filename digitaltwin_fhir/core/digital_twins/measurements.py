@@ -159,7 +159,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                       active=True,
                       characteristic=[Characteristic(
                           code=CodeableConcept(
-                              codings=[Coding(code=Code(self.primary_measurements["research_study"]["id"]))],
+                              codings=[Coding(code=Code(research_study_ref))],
                               text="dataset group member"),
                           value=GroupValue(value_reference=Reference(
                               reference=research_study_ref, display="Original dataset")
@@ -269,6 +269,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                                                                display=p["resource"]["name"][0]["text"] if "name" in p[
                                                                    "resource"] else None),
                                              encounter=Reference(reference=p["encounter"]["reference"]),
+                                             endpoint=[Reference(reference=image["endpoint"]["reference"], display="Imaging Study Endpoint")],
                                              referrer=Reference(reference=self._practitioner_ref,
                                                                 display=self._practitioner["name"][0][
                                                                     "text"] if "name" in self._practitioner else ""),
@@ -317,6 +318,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                     system="http://dicom.nema.org/resources/ontology/DCM",
                     code=Code("MR")),
                 number_of_instances=number_of_series_instances,
+                endpoint=[Reference(reference=s["endpoint"]["reference"], display="Series Endpoint")],
                 body_site=Coding(code=Code(body_site["code"]), display=body_site["display"],
                                  system=body_site["system"]) if body_site is not None else None,
                 instance=instances

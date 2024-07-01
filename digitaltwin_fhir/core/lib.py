@@ -2,7 +2,6 @@ from fhirpy import AsyncFHIRClient, SyncFHIRClient
 from .operator import Operator
 from .search import Search
 from .loader import Loader
-from .nzbase.Patient import NzPatient
 from abc import ABC, abstractmethod
 
 

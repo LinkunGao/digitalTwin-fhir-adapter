@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from digitaltwin_fhir.core.resource import ImagingStudy, Reference
 
 
 class AbstractSearch(ABC):
@@ -57,3 +58,45 @@ class Search(AbstractSearch):
         else:
             resources = resources_search_set.search(identifier=identifier).fetch_all()
         return resources
+
+    async def get_dataset_information(self, dataset_identifier):
+        infos = {}
+
+        research_study = await self.search_resource_async("ResearchStudy", dataset_identifier)
+        if research_study is None:
+            return None
+        group_search_set = self.async_client.resources("Group")
+        group = await group_search_set.search(
+            characteristic_value=research_study.to_reference()).first()
+        practitioner = await group["managingEntity"].to_resource()
+
+        infos["dataset"] = research_study
+        infos["practitioner"] = practitioner
+        infos["group"] = group
+        infos["patients"] = []
+
+        for p in group["member"]:
+            appointment = await self.async_client.resources("Appointment").search(patient=p["entity"],
+                                                                                  supporting_info=research_study.to_reference()).first()
+            encounter = await self.async_client.resources("Encounter").search(patient=p["entity"],
+                                                                              appointment=appointment.to_reference()).first()
+            count_imaging_study = self.sync_client.resources('ImagingStudy').search(
+                encounter=encounter.to_reference()).count()
+            count_observation = self.sync_client.resources('Observation').search(
+                encounter=encounter.to_reference()).count()
+
+            imagings = await self.async_client.resources("ImagingStudy").search(
+                encounter=encounter.to_reference()).limit(count_imaging_study).fetch()
+
+            infos["patients"].append({
+                "patient": await p["entity"].to_resource(),
+                "appointment": appointment,
+                "encounter": encounter,
+                "observations": await self.async_client.resources("Observation").search(
+                    encounter=encounter.to_reference()).limit(count_observation).fetch(),
+                "imagingstudies": imagings
+                # "imagingstudies": [{"imagingstudy": i, "endpoint": await i["endpoint"][0].to_resource()} for i in
+                #                    imagings]
+            })
+
+        return infos
