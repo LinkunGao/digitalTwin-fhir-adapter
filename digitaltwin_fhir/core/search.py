@@ -76,9 +76,9 @@ class Search(AbstractSearch):
         infos["patients"] = []
 
         for p in group["member"]:
-            appointment = await self.async_client.resources("Appointment").search(patient=p["entity"],
+            appointment = await self.async_client.resources("Appointment").search(patient=p.get("entity"),
                                                                                   supporting_info=research_study.to_reference()).first()
-            encounter = await self.async_client.resources("Encounter").search(patient=p["entity"],
+            encounter = await self.async_client.resources("Encounter").search(patient=p.get("entity"),
                                                                               appointment=appointment.to_reference()).first()
             count_imaging_study = self.sync_client.resources('ImagingStudy').search(
                 encounter=encounter.to_reference()).count()
@@ -89,14 +89,38 @@ class Search(AbstractSearch):
                 encounter=encounter.to_reference()).limit(count_imaging_study).fetch()
 
             infos["patients"].append({
-                "patient": await p["entity"].to_resource(),
+                "patient": await p.get("entity").to_resource(),
                 "appointment": appointment,
                 "encounter": encounter,
                 "observations": await self.async_client.resources("Observation").search(
                     encounter=encounter.to_reference()).limit(count_observation).fetch(),
                 "imagingstudies": imagings
-                # "imagingstudies": [{"imagingstudy": i, "endpoint": await i["endpoint"][0].to_resource()} for i in
-                #                    imagings]
             })
 
         return infos
+
+    async def get_patient_measurements(self, patient_identifier, patient_id):
+        measurements = {}
+
+        if not isinstance(patient_id, str):
+            patient_id = str(patient_id)
+        patients = await self.search_resources_async(resource_type="Patient", identifier=patient_identifier)
+
+        if len(patients) == 0:
+            return measurements
+
+        for p in patients:
+            if p.get("id") == patient_id:
+                appointment_count = self.sync_client.resources("Appointment").search(patient=p.get("entity")).count()
+                measurements["patient_identifier"] = p.get_by_path(["identifier", 0, "value"])
+                appointments = await self.async_client.resources("Appointment").search(patient=p.get("entity")).limit(
+                    appointment_count).fetch()
+                measurements["appointments"] = []
+                for a in appointments:
+                    temp_a = {"appointment_identifier": a.get_by_path(["identifier", 0, "value"])}
+                    encounter_count = self.sync_client.resources("Encounter").search(patient=p.get("entity"),
+                                                                                     appointment=a.to_reference()).count
+
+                    measurements["appointments"].append(temp_a)
+
+        return measurements
