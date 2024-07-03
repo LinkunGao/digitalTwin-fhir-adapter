@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+config.py
+test_backend.py
+routers
+
 dataset
 
 # C extensions

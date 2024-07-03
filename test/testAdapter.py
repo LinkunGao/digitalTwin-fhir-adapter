@@ -38,15 +38,18 @@ class Test:
         await measurements.add_practitioner(researcher=Practitioner(
             active=True,
             identifier=[
-                Identifier(use=Code("official"), system="sparc.org", value='sparc-d557ac68-f365-0718-c945-8722ec109c07')],
+                Identifier(use=Code("official"), system="sparc.org",
+                           value='sparc-d557ac68-f365-0718-c945-8722ec109c07')],
             name=[HumanName(use="usual", text="Xiaoming Li", family="Li", given=["Xiaoming"])],
             gender="male"
         ))
         await measurements.generate_resources()
 
     async def test_search_dataset(self):
-        a = await self.adapter.search().get_dataset_information(dataset_identifier="21e7de6e-01bc-11ef-878e-484d7e9beb16")
-        pprint(a)
+        # a = await self.adapter.search().get_dataset_information(dataset_identifier="21e7de6e-01bc-11ef-878e-484d7e9beb16")
+        # pprint(a)
+        await self.adapter.search().get_patient_measurements(patient_identifier="ae5808a8-26db-11ef-9766-484d7e9beb16",
+                                                             patient_id=3)
 
 
 if __name__ == '__main__':

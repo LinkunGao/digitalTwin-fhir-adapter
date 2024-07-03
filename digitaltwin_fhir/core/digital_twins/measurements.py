@@ -85,6 +85,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                     },
                     "series": []
                 })
+
             # Generate Imagingstudy series information: series number, instance number
             for image in p["imaging_study"]:
                 sample_ids = temp_df["sample_id"].unique().tolist()
@@ -269,7 +270,8 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                                                                display=p["resource"]["name"][0]["text"] if "name" in p[
                                                                    "resource"] else None),
                                              encounter=Reference(reference=p["encounter"]["reference"]),
-                                             endpoint=[Reference(reference=image["endpoint"]["reference"], display="Imaging Study Endpoint")],
+                                             endpoint=[Reference(reference=image["endpoint"]["reference"],
+                                                                 display="Imaging Study Endpoint")],
                                              referrer=Reference(reference=self._practitioner_ref,
                                                                 display=self._practitioner["name"][0][
                                                                     "text"] if "name" in self._practitioner else ""),
