@@ -109,5 +109,5 @@ class Group(AbstractResource, ABC):
         }
         return {k: v for k, v in group.items() if v not in ("", None, [])}
 
-    def convert(self):
+    def convert(self, fhirpy_resource):
         pass

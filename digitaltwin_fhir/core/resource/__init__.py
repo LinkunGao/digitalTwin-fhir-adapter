@@ -25,3 +25,8 @@ from .plan_definition import (PlanDefinition, PlanDefinitionAction, PlanDefiniti
 from .procedure import (Procedure, ProcedurePerformed, ProcedurePerformer, ProcedureFocalDevice)
 from .composition import (Composition, CompositionSection, CompositionEvent, CompositionRelatesTo, CompositionAttester,
                           CompositionTarget)
+from .research_subject import ResearchSubject
+from .consent import (Consent, ConsentPolicy, ConsentVerification, ConsentSource, ConsentProvision,
+                      ConsentProvisionActor, ConsentProvisionActorCodeableConcept,
+                      ConsentProvisionActionCodeableConcept, ConsentScopeCodeableConcept,
+                      ConsentCategoryCodeableConcept, ConsentPolicyRuleCodeableConcept, ConsentProvisionData)

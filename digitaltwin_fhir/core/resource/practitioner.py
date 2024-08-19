@@ -68,5 +68,5 @@ class Practitioner(AbstractResource, ABC):
         }
         return {k: v for k, v in practitioner.items() if v not in ("", None, [])}
 
-    def convert(self):
+    def convert(self, fhirpy_resource):
         pass
