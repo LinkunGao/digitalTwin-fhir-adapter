@@ -1,5 +1,5 @@
 from pathlib import Path
-from digitaltwin_fhir.core.resource import AbstractResource
+from digitaltwin_on_fhir.core.resource import AbstractResource
 from abc import ABC, abstractmethod
 
 
