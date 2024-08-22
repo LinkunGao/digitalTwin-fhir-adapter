@@ -55,5 +55,5 @@ class Endpoint(AbstractResource, ABC):
         }
         return {k: v for k, v in endpoint.items() if v not in ("", None, [])}
 
-    def convert(self):
+    def convert(self, fhirpy_resource):
         pass

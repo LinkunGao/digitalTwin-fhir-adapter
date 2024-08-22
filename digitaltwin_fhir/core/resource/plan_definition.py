@@ -413,5 +413,5 @@ class PlanDefinition(AbstractResource, ABC):
         }
         return {k: v for k, v in plan_definition.items() if v not in ("", None, [])}
 
-    def convert(self):
+    def convert(self, fhirpy_resource):
         pass

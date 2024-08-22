@@ -17,7 +17,7 @@ class AbstractLoader(ABC):
         pass
 
     @abstractmethod
-    def load_sparc_dataset_primary_measurements(self, dataset_path):
+    def load_sparc_dataset_primary_measurements(self):
         pass
 
 
@@ -27,8 +27,8 @@ class Loader(AbstractLoader, ABC):
     def __init__(self, core, operator):
         super().__init__(core, operator)
 
-    def load_sparc_dataset_primary_measurements(self, dataset_path):
-        return self.measurements_class(self.operator, dataset_path)
+    def load_sparc_dataset_primary_measurements(self):
+        return self.measurements_class(self.operator)
 
     async def load_fhir_bundle(self, dataset_path):
         sys.stdout.write("Import progress: 0%   \r")

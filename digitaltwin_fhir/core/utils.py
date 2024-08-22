@@ -1,5 +1,6 @@
 import datetime
 import pytz
+from datetime import timezone
 
 FHIR_DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 FHIR_DATE_FORMAT = "%Y-%m-%d"
@@ -31,6 +32,4 @@ def transform_value(value):
     if isinstance(value, bool):
         return "true" if value else "false"
     return value
-
-
 

@@ -1,7 +1,7 @@
 from abc import ABC
 from .abstract_resource import AbstractResource
 from .element import (Meta, Identifier, CodeableConcept, Reference, Period, Timing, Quantity, Range, Ratio, SampledData,
-                      Annotation)
+                      Annotation, Coding, Code)
 from typing import Optional, List, Literal
 
 
@@ -42,6 +42,45 @@ class ObservationValue:
         self.value_time = value_time
         self.value_date_time = value_date_time
         self.value_period = value_period
+
+    def set(self, key, value):
+        if key == "valueQuantity":
+            self.value_quantity = Quantity(value=value.get("value"), unit=value.get("unit"), system=value.get("system"),
+                                           code=Code(value=value.get("code")))
+        elif key == "valueCodeableConcept":
+            self.value_codeable_concept = CodeableConcept(
+                codings=[
+                    Coding(code=Code(value=c.get("code")), version=c.get("version"), display=c.get("display"),
+                           user_selected=c.get("userSelected"))
+                    for c in value.get("coding", [])], text=value.get("text"))
+        elif key == "valueString":
+            self.value_string = value
+        elif key == "valueBoolean":
+            self.value_boolean = value
+        elif key == "valueInteger":
+            self.value_integer = value
+        elif key == "valueRange":
+            self.value_range = Range(low=value.get("low"), high=value.get("high"))
+        elif key == "valueRatio":
+            self.value_ratio = Ratio(
+                numerator=Quantity(value=value.get("numerator").get("value"), unit=value.get("numerator").get("unit"),
+                                   system=value.get("numerator").get("system"),
+                                   code=value.get("numerator").get("code")),
+                denominator=Quantity(value=value.get("denominator").get("value"),
+                                     unit=value.get("denominator").get("unit"),
+                                     system=value.get("denominator").get("system"),
+                                     code=value.get("denominator").get("code")))
+        elif key == "valueSampledData":
+            self.value_sampled_data = SampledData(origin=value.get("origin"), period=value.get("period"),
+                                                  dimensions=value.get("dimensions"), data=value.get("data"),
+                                                  lower_limit=value.get("lowerLimit"),
+                                                  upper_limit=value.get("upperLimit"), factor=value.get("factor"))
+        elif key == "valueTime":
+            self.value_time = value
+        elif key == "valueDateTime":
+            self.value_date_time = value
+        elif key == "valuePeriod":
+            self.value_period = Period(start=value.get("start"), end=value.get("end"))
 
     def get(self):
         value = {
@@ -189,7 +228,7 @@ class Observation(AbstractResource, ABC):
             "status": self.status if self.status in ["registered", "preliminary", "final", "amended"] else None,
             "category": [c.get() for c in self.category if isinstance(c, CodeableConcept)] if isinstance(self.category,
                                                                                                          list) else None,
-            "code": self.code.get() if isinstance(self.code, Reference) else None,
+            "code": self.code.get() if isinstance(self.code, CodeableConcept) else None,
             "subject": self.subject.get() if isinstance(self.subject, Reference) else None,
             "focus": [f.get() for f in self.focus if isinstance(f, Reference)] if isinstance(self.focus,
                                                                                              list) else None,
@@ -247,3 +286,6 @@ class Observation(AbstractResource, ABC):
                 self.component, list) else None
         }
         return {k: v for k, v in observation.items() if v not in ("", None, [])}
+
+    def convert(self, fhirpy_resource):
+        pass

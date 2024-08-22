@@ -169,5 +169,5 @@ class Procedure(AbstractResource, ABC):
         }
         return {k: v for k, v in procedure.items() if v not in ("", None, [])}
 
-    def convert(self):
+    def convert(self, fhirpy_resource):
         pass

@@ -137,5 +137,5 @@ class ResearchStudy(AbstractResource, ABC):
         }
         return {k: v for k, v in researchstudy.items() if v not in ("", None, [])}
 
-    def convert(self):
+    def convert(self, fhirpy_resource):
         pass
