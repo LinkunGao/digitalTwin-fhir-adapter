@@ -1,4 +1,4 @@
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Union
 from ..utils import transform_value
 
 
@@ -304,9 +304,9 @@ class Attachment:
 
 class Quantity:
 
-    def __init__(self, value: Optional[float] = None, comparator: Optional[Literal["<", "<=", ">=", ">"]] = None,
+    def __init__(self, value: Optional[Union[float, int]] = None, comparator: Optional[Literal["<", "<=", ">=", ">"]] = None,
                  unit: Optional[str] = None, system: Optional[str] = None, code: Optional[Code] = None):
-        self.value = value
+        self.value = float(value) if isinstance(value, int) else value
         self.comparator = comparator
         self.unit = unit
         self.system = system

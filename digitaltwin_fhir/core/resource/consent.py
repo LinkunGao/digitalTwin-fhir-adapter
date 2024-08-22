@@ -148,18 +148,18 @@ class Consent(AbstractResource, ABC):
                                                                                                          list) else None,
             "patient": self.patient.get() if isinstance(self.patient, Reference) else None,
             "dateTime": self.date_time if isinstance(self.date_time, str) else None,
-            "performer": [p for p in self.performer if isinstance(p, Reference)] if isinstance(self.performer,
+            "performer": [p.get() for p in self.performer if isinstance(p, Reference)] if isinstance(self.performer,
                                                                                                list) else None,
-            "organization": [o for o in self.organization if isinstance(o, Reference)] if isinstance(self.organization,
+            "organization": [o.get() for o in self.organization if isinstance(o, Reference)] if isinstance(self.organization,
                                                                                                      list) else None,
             "sourceAttachment": self.source.get().get("sourceAttachment") if isinstance(self.source,
                                                                                         ConsentSource) else None,
             "sourceReference": self.source.get().get("sourceReference") if isinstance(self.source,
                                                                                       ConsentSource) else None,
-            "policy": [p for p in self.policy if isinstance(p, ConsentPolicy)] if isinstance(self.policy,
+            "policy": [p.get() for p in self.policy if isinstance(p, ConsentPolicy)] if isinstance(self.policy,
                                                                                              list) else None,
             "policyRule": self.policy_rule.get() if isinstance(self.policy_rule, CodeableConcept) else None,
-            "verification": [v for v in self.verification if isinstance(v, ConsentVerification)] if isinstance(
+            "verification": [v.get() for v in self.verification if isinstance(v, ConsentVerification)] if isinstance(
                 self.verification, list) else None,
             "provision": self.provision.get() if isinstance(self.provision, ConsentProvision) else None,
         }

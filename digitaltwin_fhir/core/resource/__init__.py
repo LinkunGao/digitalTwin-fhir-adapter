@@ -30,3 +30,5 @@ from .consent import (Consent, ConsentPolicy, ConsentVerification, ConsentSource
                       ConsentProvisionActor, ConsentProvisionActorCodeableConcept,
                       ConsentProvisionActionCodeableConcept, ConsentScopeCodeableConcept,
                       ConsentCategoryCodeableConcept, ConsentPolicyRuleCodeableConcept, ConsentProvisionData)
+from .observation import (Observation, ObservationValue, ObservationComponent, ObservationEffective,
+                          ObservationReferenceRange)

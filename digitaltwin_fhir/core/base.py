@@ -52,7 +52,7 @@ class Create(AbstractOperatorBase, ABC):
         except KeyError:
             self.resource = None
             print("Please provide identifier for this resource")
-        await self.resource.save()
+        self.resource = await self.resource.create()
         return self.resource
 
     async def _is_resource_exist(self, resource_type, identifier):
