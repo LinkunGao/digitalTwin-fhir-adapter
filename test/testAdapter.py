@@ -1,6 +1,6 @@
 import asyncio
-from digitaltwin_fhir.core import Adapter, transform_value
-from digitaltwin_fhir.core.resource import Patient, Identifier, Code, HumanName, Practitioner, ImagingStudy
+from digitaltwin_on_fhir.core import Adapter, transform_value
+from digitaltwin_on_fhir.core.resource import Patient, Identifier, Code, HumanName, Practitioner, ImagingStudy
 import datetime
 from fhir_cda.ehr import Measurement
 from utils import tools

@@ -3,8 +3,10 @@
 ## Usage
 
 - Setup and connect to FHIR server
+
 ```python
-from digitaltwin_fhir.core import Adapter
+from digitaltwin_on_fhir.core import Adapter
+
 adapter = Adapter("http://localhost:8080/fhir/")
 ```
 
@@ -27,8 +29,9 @@ await measurements.add_measurements_description(data)
         .generate_resources()
 ```
 - Add Practitioner (researcher) to FHIR server
+
 ```python
-from digitaltwin_fhir.core.resource import Identifier, Code, HumanName, Practitioner
+from digitaltwin_on_fhir.core.resource import Identifier, Code, HumanName, Practitioner
 
 await measurements.add_practitioner(researcher=Practitioner(
     active=True,
