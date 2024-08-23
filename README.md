@@ -1,5 +1,5 @@
 # digitalTwinOnFHIR
-![DigitalTWIN on FHIR](images/digitalTWINonFHIR.png)
+![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/v1.0.0.png)
 ## Usage
 
 - Setup and connect to FHIR server
