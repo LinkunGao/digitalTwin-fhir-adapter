@@ -304,7 +304,8 @@ class Attachment:
 
 class Quantity:
 
-    def __init__(self, value: Optional[Union[float, int]] = None, comparator: Optional[Literal["<", "<=", ">=", ">"]] = None,
+    def __init__(self, value: Optional[Union[float, int]] = None,
+                 comparator: Optional[Literal["<", "<=", ">=", ">"]] = None,
                  unit: Optional[str] = None, system: Optional[str] = None, code: Optional[Code] = None):
         self.value = float(value) if isinstance(value, int) else value
         self.comparator = comparator
@@ -619,7 +620,7 @@ class DataRequirementCodeFilter:
         return {k: v for k, v in code_filter.items() if v not in ("", None, [])}
 
 
-class DataRequirementDataFilterValue:
+class DataRequirementDateFilterValue:
 
     def __init__(self, value_date_time: Optional[str] = None, value_period: Optional[Period] = None,
                  value_duration: Optional[str] = None):
@@ -636,9 +637,9 @@ class DataRequirementDataFilterValue:
         return {k: v for k, v in value.items() if v not in ("", None)}
 
 
-class DataRequirementDataFilter:
+class DataRequirementDateFilter:
     def __init__(self, path: Optional[str] = None, search_param: Optional[str] = None,
-                 value: Optional[DataRequirementDataFilterValue] = None):
+                 value: Optional[DataRequirementDateFilterValue] = None):
         self.path = path
         self.search_param = search_param
         self.value = value
@@ -648,11 +649,11 @@ class DataRequirementDataFilter:
             "path": self.path if isinstance(self.path, str) else None,
             "searchParam": self.search_param if isinstance(self.search_param, str) else None,
             "valueDateTime": self.value.get().get("valueDateTime") if isinstance(self.value,
-                                                                                 DataRequirementDataFilterValue) else None,
+                                                                                 DataRequirementDateFilterValue) else None,
             "valuePeriod": self.value.get().get("valuePeriod") if isinstance(self.value,
-                                                                             DataRequirementDataFilterValue) else None,
+                                                                             DataRequirementDateFilterValue) else None,
             "valueDuration": self.value.get().get("valueDuration") if isinstance(self.value,
-                                                                                 DataRequirementDataFilterValue) else None,
+                                                                                 DataRequirementDateFilterValue) else None,
         }
         return {k: v for k, v in code_filter.items() if v not in ("", None)}
 
@@ -676,7 +677,7 @@ class DataRequirement:
     def __init__(self, data_requirement_type: Code, profile: Optional[List[str]] = None,
                  subject: Optional[FHIRSubject] = None, must_support: Optional[List[str]] = None,
                  code_filter: Optional[List[DataRequirementCodeFilter]] = None,
-                 data_filter: Optional[List[DataRequirementDataFilter]] = None, limit: Optional[int] = None,
+                 data_filter: Optional[List[DataRequirementDateFilter]] = None, limit: Optional[int] = None,
                  sort: Optional[List[DataRequirementSort]] = None):
         self.data_requirement_type = data_requirement_type
         self.profile = profile
@@ -699,7 +700,7 @@ class DataRequirement:
                                                                                               list) else None,
             "codeFilter": [c.get() for c in self.code_filter if isinstance(c, DataRequirementCodeFilter)] if isinstance(
                 self.code_filter, list) else None,
-            "dateFilter": [d.get() for d in self.data_filter if isinstance(d, DataRequirementDataFilter)] if isinstance(
+            "dateFilter": [d.get() for d in self.data_filter if isinstance(d, DataRequirementDateFilter)] if isinstance(
                 self.data_filter, list) else None,
             "limit": self.limit if isinstance(self.limit, int) and self.limit > 0 else None,
             "sort": [s.get() for s in self.sort if isinstance(s, DataRequirementSort)] if isinstance(self.sort,
@@ -794,3 +795,117 @@ class Narrative:
             "div": self.div if isinstance(self.div, str) else None
         }
         return {k: v for k, v in narrative.items() if v not in ("", None)}
+
+
+class DosageAsNeeded:
+    def __init__(self, as_needed_boolean: Optional[bool] = None,
+                 as_needed_codeable_concept: Optional[CodeableConcept] = None):
+        self.as_needed_boolean = as_needed_boolean
+        self.as_needed_codeable_concept = as_needed_codeable_concept
+
+    def get(self):
+        needed = {
+            "asNeededBoolean": self.as_needed_boolean if isinstance(self.as_needed_boolean, bool) else None,
+            "asNeededCodeableConcept:": self.as_needed_codeable_concept.get() if isinstance(
+                self.as_needed_codeable_concept, CodeableConcept) else None,
+        }
+        return {k: v for k, v in needed.items() if v not in ("", None)}
+
+
+class DosageDoseAndRateDose:
+    def __init__(self, dose_range: Optional[Range] = None, dose_quantity: Optional[str] = None):
+        self.range = dose_range
+        self.quantity = dose_quantity
+
+    def get(self):
+        dose = {
+            "doseRange": self.range.get() if self.range else None,
+            "doseQuantity": self.quantity if isinstance(self.quantity, str) else None
+        }
+        return {k: v for k, v in dose.items() if v not in ("", None)}
+
+
+class DosageDoseAndRateRate:
+    def __init__(self, rate_ratio: Optional[Ratio] = None, rate_range: Optional[Range] = None,
+                 rate_quantity: Optional[str] = None):
+        self.rate_ratio = rate_ratio
+        self.rate_range = rate_range
+        self.rate_quantity = rate_quantity
+
+    def get(self):
+        rate = {
+            "rateRatio": self.rate_ratio.get() if isinstance(self.rate_ratio, Ratio) else None,
+            "rateRange": self.rate_range.get() if isinstance(self.rate_range, Range) else None,
+            "rateQuantity": self.rate_quantity if isinstance(self.rate_quantity, str) else None
+        }
+        return {k: v for k, v in rate.items() if v not in ("", None)}
+
+
+class DosageDoseAndRate:
+    def __init__(self, _type: Optional[CodeableConcept] = None, dose: Optional[DosageDoseAndRateDose] = None,
+                 rate: Optional[DosageDoseAndRateRate] = None):
+        self._type = _type
+        self.dose = dose
+        self.rate = rate
+
+    def get(self):
+        dose_rate = {
+            "type": self._type.get() if isinstance(self._type, CodeableConcept) else None,
+            "doseRange": self.dose.get().get("doseRange") if isinstance(self.dose, DosageDoseAndRateDose) else None,
+            "doseQuantity": self.dose.get().get("doseQuantity") if isinstance(self.dose,
+                                                                              DosageDoseAndRateDose) else None,
+            "rateRatio": self.rate.get().get("rateRatio") if isinstance(self.rate, DosageDoseAndRateRate) else None,
+            "rateRange": self.rate.get().get("rateRange") if isinstance(self.rate, DosageDoseAndRateRate) else None,
+            "rateQuantity": self.rate.get().get("rateQuantity") if isinstance(self.rate,
+                                                                              DosageDoseAndRateRate) else None
+        }
+        return {k: v for k, v in dose_rate.items() if v not in ("", None)}
+
+
+class Dosage:
+
+    def __init__(self, sequence: Optional[int] = None, text: Optional[str] = None,
+                 additional_instruction: Optional[List[CodeableConcept]] = None,
+                 patient_instruction: Optional[str] = None, timing: Optional[Timing] = None,
+                 as_needed: Optional[DosageAsNeeded] = None, site: Optional[CodeableConcept] = None,
+                 route: Optional[CodeableConcept] = None, method: Optional[CodeableConcept] = None,
+                 dose_and_rate: Optional[DosageDoseAndRate] = None, max_dose_period: Optional[Ratio] = None,
+                 max_dose_per_administration: Optional[str] = None, max_dose_per_lifetime: Optional[str] = None):
+        self.sequence = sequence
+        self.text = text
+        self.additional_instruction = additional_instruction
+        self.patient_instruction = patient_instruction
+        self.timing = timing
+        self.as_needed = as_needed
+        self.site = site
+        self.route = route
+        self.method = method
+        self.dose_and_rate = dose_and_rate
+        self.max_dose_period = max_dose_period
+        self.max_dose_per_administration = max_dose_per_administration
+        self.max_dose_per_lifetime = max_dose_per_lifetime
+
+    def get(self):
+        dosage = {
+            "sequence": self.sequence if isinstance(self.sequence, int) else None,
+            "text": self.text if isinstance(self.text, str) else None,
+            "additionalInstruction": [a.get() for a in self.additional_instruction if
+                                      isinstance(a, CodeableConcept)] if isinstance(self.additional_instruction,
+                                                                                    list) else None,
+            "patientInstruction": self.patient_instruction if isinstance(self.patient_instruction, str) else None,
+            "timing": self.timing.get() if isinstance(self.timing, Timing) else None,
+            "asNeededBoolean": self.as_needed.get().get("asNeededBoolean") if isinstance(self.as_needed,
+                                                                                         DosageAsNeeded) else None,
+            "asNeededCodeableConcept": self.as_needed.get().get("asNeededCodeableConcept") if isinstance(self.as_needed,
+                                                                                                         DosageAsNeeded) else None,
+            "site": self.site if isinstance(self.site, CodeableConcept) else None,
+            "route": self.route if isinstance(self.route, CodeableConcept) else None,
+            "method": self.method if isinstance(self.method, CodeableConcept) else None,
+            "doseAndRate": self.dose_and_rate.get() if isinstance(self.dose_and_rate, DosageDoseAndRate) else None,
+            "maxDosePerPeriod": self.max_dose_period.get() if isinstance(self.max_dose_period, Ratio) else None,
+            "maxDosePerAdministration": self.max_dose_per_administration if isinstance(self.max_dose_per_administration,
+                                                                                       str) else None,
+            "maxDosePerLifetime": self.max_dose_per_lifetime.get() if isinstance(self.max_dose_per_lifetime,
+                                                                                 str) else None,
+        }
+        return {k: v for k, v in dosage.items() if v not in ("", None)}

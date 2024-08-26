@@ -3,8 +3,8 @@ from .element import (
     Code, Coding, CodeableConcept, ContactPoint, Reference, Address, Attachment, Author, Annotation, Period, Profile,
     Identifier, HumanName, RelatedArtifact, RepeatBounds, Repeat, Timing, ContactDetail, Ratio, SampledData,
     UsageContext, UsageContextValue, Quantity, FHIRSubject, TriggerDefinition, TriggerDefinitionTiming, DataRequirement,
-    DataRequirementSort, DataRequirementDataFilter, DataRequirementCodeFilter, DataRequirementDataFilterValue,
-    Expression, Narrative
+    DataRequirementSort, DataRequirementDateFilter, DataRequirementCodeFilter, DataRequirementDateFilterValue,
+    Expression, Narrative, Dosage, DosageAsNeeded, DosageDoseAndRate, DosageDoseAndRateRate, DosageDoseAndRateDose
 )
 
 from .patient import Patient, Deceased, MultipleBrith, Contact, Communication
@@ -18,8 +18,7 @@ from .encounter import (Encounter, EncounterLocation, EncounterHospitalization, 
 from .imaging_study import ImagingStudy, ImagingStudySeries, ImagingStudyInstance, ImagingStudyPerformer
 from .endpoint import Endpoint
 from .plan_definition import (PlanDefinition, PlanDefinitionAction, PlanDefinitionGoal,
-                              PlanDefinitionActionDynamicValue, PlanDefinitionActionDefinition,
-                              PlanDefinitionActionParticipant, PlanDefinitionActionTiming,
+                              PlanDefinitionActionDefinition,
                               PlanDefinitionActionRelatedAction, PlanDefinitionActionRelatedActionOffset,
                               PlanDefinitionActionCondition, PlanDefinitionTarget, PlanDefinitionTargetDetail)
 from .procedure import (Procedure, ProcedurePerformed, ProcedurePerformer, ProcedureFocalDevice)
@@ -32,3 +31,6 @@ from .consent import (Consent, ConsentPolicy, ConsentVerification, ConsentSource
                       ConsentCategoryCodeableConcept, ConsentPolicyRuleCodeableConcept, ConsentProvisionData)
 from .observation import (Observation, ObservationValue, ObservationComponent, ObservationEffective,
                           ObservationReferenceRange)
+from .definition import (DefinitionParticipant, DefinitionTiming, DynamicValue)
+from .activity_definition import ActivityDefinition, ActivityDefinitionProduct
+from .task import Task, TaskRestriction, TaskInputOutput

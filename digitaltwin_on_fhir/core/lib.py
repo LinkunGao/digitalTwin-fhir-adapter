@@ -2,6 +2,7 @@ from fhirpy import AsyncFHIRClient, SyncFHIRClient
 from .operator import Operator
 from .search import Search
 from .loader import Loader
+from .digitaltwin import DigitalTwin
 from abc import ABC, abstractmethod
 
 
@@ -33,6 +34,11 @@ class AbstractAdapter(ABC):
 
     @property  # pragma no cover
     @abstractmethod
+    def digitaltwin_class(self):
+        pass
+
+    @property  # pragma no cover
+    @abstractmethod
     def search_class(self):
         pass
 
@@ -41,6 +47,7 @@ class Adapter(AbstractAdapter, ABC):
     operator_class = Operator
     search_class = Search
     loader_class = Loader
+    digitaltwin_class = DigitalTwin
 
     def __init__(self, url, authorization='Bearer TOKEN'):
         super().__init__(url, authorization)
@@ -53,3 +60,6 @@ class Adapter(AbstractAdapter, ABC):
 
     def loader(self):
         return self.loader_class(self, self.operator())
+
+    def digital_twin(self):
+        return self.digitaltwin_class(self, self.operator())

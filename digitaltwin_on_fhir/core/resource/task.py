@@ -23,13 +23,13 @@ class TaskRestriction:
 
 
 class TaskInputOutput:
-    def __init__(self, input_type: CodeableConcept, value: Any):
-        self.input_type = input_type
+    def __init__(self, input_output_type: CodeableConcept, value: Any):
+        self.input_output_type = input_output_type
         self.value = value
 
     def get(self):
         param = {
-            "type": self.input_type.get() if isinstance(self.input_type, CodeableConcept) else None,
+            "type": self.input_output_type.get() if isinstance(self.input_output_type, CodeableConcept) else None,
             "valueReference": self.value.get() if isinstance(self.value, Reference) else None,
             "valuePositiveInt": self.value if isinstance(self.value, int) and self.value > 0 else None,
             "valueString": self.value if isinstance(self.value, str) else None

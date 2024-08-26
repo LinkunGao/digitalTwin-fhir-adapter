@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import sys
 from pathlib import Path
 import json
-from .digital_twins import Measurements
 
 
 class AbstractLoader(ABC):
@@ -16,19 +15,10 @@ class AbstractLoader(ABC):
     def load_fhir_bundle(self, dataset_path):
         pass
 
-    @abstractmethod
-    def load_sparc_dataset_primary_measurements(self):
-        pass
-
 
 class Loader(AbstractLoader, ABC):
-    measurements_class = Measurements
-
     def __init__(self, core, operator):
         super().__init__(core, operator)
-
-    def load_sparc_dataset_primary_measurements(self):
-        return self.measurements_class(self.operator)
 
     async def load_fhir_bundle(self, dataset_path):
         sys.stdout.write("Import progress: 0%   \r")

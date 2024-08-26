@@ -15,12 +15,12 @@ from typing import Dict, Any, List
 
 
 class Measurements(AbstractDigitalTWINBase, ABC):
-    def __init__(self, operator):
+    def __init__(self, core, operator):
         self.primary_measurements: Dict[str, Any] = {}
         self.cda_descriptions = None
         self._practitioner = None
         self._practitioner_ref = None
-        super().__init__(operator)
+        super().__init__(core, operator)
 
     def analysis_dataset(self, dataset_path):
         annotator = Annotator(dataset_path)
@@ -35,7 +35,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         if not isinstance(descriptions, (dict, list)):
             raise ValueError("description must be json format data")
         if not isinstance(descriptions.get("dataset"), dict) or not isinstance(descriptions.get("patients"), list):
-            raise ValueError("description must be SPARC Clinic Description Annotator json format data")
+            raise ValueError("description must be SPARC Clinic Description Annotator Measurements json format data")
         self.cda_descriptions = descriptions
         return self
 

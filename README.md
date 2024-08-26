@@ -48,4 +48,4 @@ await measurements.add_practitioner(researcher=Practitioner(
 ### Search
 
 ## DigitalTWIN on FHIR Diagram
-![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/v1.0.0.png)
+![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/v1.0.1.png)
