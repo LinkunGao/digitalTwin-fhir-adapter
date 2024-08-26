@@ -1,7 +1,8 @@
 from abc import ABC
 from .abstract_resource import AbstractResource
 from .element import (Meta, Identifier, CodeableConcept, ContactDetail, UsageContext, RelatedArtifact,
-                      Period, Timing, FHIRSubject, Quantity, Range, TriggerDefinition, Expression, DataRequirement)
+                      Period, FHIRSubject, Quantity, Range, TriggerDefinition, Expression, DataRequirement)
+from .definition import (DynamicValue, DefinitionTiming, DefinitionParticipant)
 from typing import Optional, List, Literal
 
 
@@ -126,44 +127,6 @@ class PlanDefinitionActionRelatedAction:
         return {k: v for k, v in related_action.items() if v not in ("", None)}
 
 
-class PlanDefinitionActionTiming:
-    def __init__(self, timing_date_time: Optional[str] = None, timing_age: Optional[str] = None,
-                 timing_period: Optional[Period] = None, timing_duration: Optional[str] = None,
-                 timing_range: Optional[Range] = None, timing_timing: Optional[Timing] = None):
-        self.timing_date_time = timing_date_time
-        self.timing_age = timing_age
-        self.timing_period = timing_period
-        self.timing_duration = timing_duration
-        self.timing_range = timing_range
-        self.timing_timing = timing_timing
-
-    def get(self):
-        timing = {
-            "timingDateTime": self.timing_date_time if isinstance(self.timing_date_time, str) else None,
-            "timingAge": self.timing_age if isinstance(self.timing_age, str) else None,
-            "timingPeriod": self.timing_period.get() if isinstance(self.timing_period, Period) else None,
-            "timingDuration": self.timing_duration if isinstance(self.timing_duration, str) else None,
-            "timingRange": self.timing_range.get() if isinstance(self.timing_range, Range) else None,
-            "timingTiming": self.timing_timing.get() if isinstance(self.timing_timing, Timing) else None
-        }
-        return {k: v for k, v in timing.items() if v not in ("", None)}
-
-
-class PlanDefinitionActionParticipant:
-    def __init__(self, participant_type: Literal["patient", "practitioner", "related-person", "device"],
-                 role: Optional[CodeableConcept] = None):
-        self.participant_type = participant_type
-        self.role = role
-
-    def get(self):
-        participant = {
-            "type": self.participant_type if self.participant_type in ["patient", "practitioner", "related-person",
-                                                                       "device"] else None,
-            "role": self.role.get() if isinstance(self.role, CodeableConcept) else None
-        }
-        return {k: v for k, v in participant.items() if v not in ("", None)}
-
-
 class PlanDefinitionActionDefinition:
     def __init__(self, definition_canonical: Optional[str] = None, definition_uri: Optional[str] = None):
         self.definition_canonical = definition_canonical
@@ -177,19 +140,6 @@ class PlanDefinitionActionDefinition:
         return {k: v for k, v in definition.items() if v not in ("", None)}
 
 
-class PlanDefinitionActionDynamicValue:
-    def __init__(self, path: Optional[str] = None, expression: Optional[Expression] = None):
-        self.path = path
-        self.expression = expression
-
-    def get(self):
-        dynamic_value = {
-            "path": self.path if isinstance(self.path, str) else None,
-            "expression": self.expression if isinstance(self.expression, Expression) else None
-        }
-        return {k: v for k, v in dynamic_value.items() if v not in ("", None)}
-
-
 class PlanDefinitionAction:
     def __init__(self, prefix: Optional[str] = None, title: Optional[str] = None, description: Optional[str] = None,
                  text_equivalent: Optional[str] = None,
@@ -200,8 +150,8 @@ class PlanDefinitionAction:
                  condition: Optional[List[PlanDefinitionActionCondition]] = None,
                  input: Optional[List[DataRequirement]] = None, output: Optional[List[DataRequirement]] = None,
                  related_action: Optional[List[PlanDefinitionActionRelatedAction]] = None,
-                 timing: Optional[PlanDefinitionActionTiming] = None,
-                 participant: Optional[List[PlanDefinitionActionParticipant]] = None,
+                 timing: Optional[DefinitionTiming] = None,
+                 participant: Optional[List[DefinitionParticipant]] = None,
                  action_type: Optional[CodeableConcept] = None,
                  grouping_behavior: Optional[Literal["visual-group", "logical-group", "sentence-group"]] = None,
                  selection_behavior: Optional[
@@ -210,7 +160,7 @@ class PlanDefinitionAction:
                  precheck_behavior: Optional[Literal["yes", "no"]] = None,
                  cardinality_behavior: Optional[Literal["single", "multiple"]] = None,
                  definition: Optional[PlanDefinitionActionDefinition] = None, transform: Optional[str] = None,
-                 dynamic_value: Optional[List[PlanDefinitionActionDynamicValue]] = None,
+                 dynamic_value: Optional[List[DynamicValue]] = None,
                  action: Optional = None):
         self.prefix = prefix
         self.title = title
@@ -271,19 +221,19 @@ class PlanDefinitionAction:
                               isinstance(r, PlanDefinitionActionRelatedAction)] if isinstance(self.related_action,
                                                                                               list) else None,
             "timingDateTime": self.timing.get().get("timingDateTime") if isinstance(self.timing,
-                                                                                    PlanDefinitionActionTiming) else None,
+                                                                                    DefinitionTiming) else None,
             "timingAge": self.timing.get().get("timingAge") if isinstance(self.timing,
-                                                                          PlanDefinitionActionTiming) else None,
+                                                                          DefinitionTiming) else None,
             "timingPeriod": self.timing.get().get("timingPeriod") if isinstance(self.timing,
-                                                                                PlanDefinitionActionTiming) else None,
+                                                                                DefinitionTiming) else None,
             "timingDuration": self.timing.get().get("timingDuration") if isinstance(self.timing,
-                                                                                    PlanDefinitionActionTiming) else None,
+                                                                                    DefinitionTiming) else None,
             "timingRange": self.timing.get().get("timingRange") if isinstance(self.timing,
-                                                                              PlanDefinitionActionTiming) else None,
+                                                                              DefinitionTiming) else None,
             "timingTiming": self.timing.get().get("timingTiming") if isinstance(self.timing,
-                                                                                PlanDefinitionActionTiming) else None,
+                                                                                DefinitionTiming) else None,
             "participant": [p.get() for p in self.participant if
-                            isinstance(p, PlanDefinitionActionParticipant)] if isinstance(self.participant,
+                            isinstance(p, DefinitionParticipant)] if isinstance(self.participant,
                                                                                           list) else None,
             "type": self.action_type.get() if isinstance(self.action_type, CodeableConcept) else None,
             "groupingBehavior": self.grouping_behavior if self.grouping_behavior in ["visual-group", "logical-group",
@@ -302,8 +252,8 @@ class PlanDefinitionAction:
                                                                                       PlanDefinitionActionDefinition) else None,
             "transform": self.transform if isinstance(self.transform, str) else None,
             "dynamicValue": [d.get() for d in self.dynamic_value if
-                             isinstance(d, PlanDefinitionActionDynamicValue)] if isinstance(self.dynamic_value,
-                                                                                            list) else None,
+                             isinstance(d, DynamicValue)] if isinstance(self.dynamic_value,
+                                                                        list) else None,
             "action": self.action.get() if isinstance(self.action, PlanDefinitionAction) else None
         }
         return {k: v for k, v in action.items() if v not in ("", None, [])}
