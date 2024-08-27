@@ -24,9 +24,7 @@ measurements = adapter.loader().load_sparc_dataset_primary_measurements()
 with open('./dataset/measurements.json', 'r') as file:
     data = json.load(file)
 
-await measurements.add_measurements_description(data)
-        .generate_measurements_via_cda_descriptions()
-        .generate_resources()
+await measurements.add_measurements_description(data).generate_resources()
 ```
 - Add Practitioner (researcher) to FHIR server
 
@@ -46,6 +44,95 @@ await measurements.add_practitioner(researcher=Practitioner(
 #### Workflow
 
 ### Search
+#### References in Task (workflow tool process) resource
+- owner: `Patient` reference
+- for: `PlanDefinition` (workflow) reference
+- focus: `ActivityDefinition` (workflow tool) reference
+- basedOn: `ResearchSubject` reference
+- requester (Optional): `Practitioner` (researcher) reference
+- references in input
+  - ImagingStudy
+  - Observation
+- references in output
+  - Observation
+
+###### Example
+
+- Find a specific workflow process
+  - If known: patient, dataset, workflow tool and workflow uuids
+
+```python
+client = adapter.async_client
+
+# Step 1: find the patient
+patient = await client.resources("Patient").search(
+                                    identifier="patient-xxxx").first()
+# Step 2: find the dataset
+dataset = await client.resources("ResearchStudy").search(
+                                    identifier="dataset-xxxx").first()
+# Step 3: find the workflow tool
+workflow_tool = await client.resources("ActivityDefinition").search(
+                                    identifier="workflow-tool-xxxx").first()
+# Step 4: find the research subject
+research_subject = await client.resources("ResearchSubject").search(
+                                    patient=patient.to_reference().reference,
+                                    study=dataset.to_reference().reference).first()
+# Step 5: find workflow
+workflow = await client.resources("PlanDefinition").search(
+                                    identifier="sparc-workflow-uuid-001").first()
+workflow_tool_process = await client.resources("Task").search(
+                                    subject=workflow.to_reference(),
+                                    focus=workflow_tool.to_reference(),
+                                    based_on=research_subject.to_reference(),
+                                    owner=patient.to_reference()).first()
+```
+- Find all input resources of the workflow tool process
+```python
+inputs = workflow_tool_process.get("input")
+for i in inputs:
+    input_reference = i.get("valueReference")
+    input_resource = await input_reference.to_resource()
+```
+- Find the input data comes from with dataset
+  - Assume we don't know the dataset and patient uuids at this stage
+```python
+composition = await client.resources("Composition").search(
+                                    title="primary measurements", 
+                                    entry=input_reference).first()
+dataset = await composition.get("subject").to_resource()
+```
+
+- Find all output resources of the workflow tool process
+```python
+outputs = workflow_tool_process.get("output")
+for output in outputs:
+    output_reference = output.get("valueReference")
+    output_resource = await output_reference.to_resource()
+```
+
+#### References in PlanDefinition (workflow) resource
+- action
+  - definition_canonical: ActivityDefinition (workflow tool) reference
+
+###### Example
+- If known workflow uuid
+  - Find all related workflow tools
+    ```python
+    workflow = await client.resources("PlanDefinition").search(
+                                        identifier="sparc-workflow-uuid-001").first()
+    actions = workflow.get("action")
+    
+    for a in actions:
+        if a.get("definitionCanonical") is None:
+            continue
+        resource_type, _id = a.get("definitionCanonical").split("/")
+        workflow_tool = await client.reference(resource_type, _id).to_resource()
+    ```
+  - Find all related workflow processes
+    ```python
+    workflow_tool_processes = await client.resources("Task").search(
+                                        subject=workflow.to_reference()).fetch_all()
+    ```
 
 ## DigitalTWIN on FHIR Diagram
 ![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/v1.0.1.png)
