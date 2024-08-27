@@ -66,8 +66,7 @@ class Test:
             gender="male"
         ))
 
-        await measurements.add_measurements_description(
-            data).generate_measurements_via_cda_descriptions().generate_resources()
+        await measurements.add_measurements_description(data).generate_resources()
         # pprint(measurements.primary_measurements)
 
     async def test_workflow_tool_load_json_description(self):

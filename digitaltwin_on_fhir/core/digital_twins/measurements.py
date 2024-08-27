@@ -37,9 +37,9 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         if not isinstance(descriptions.get("dataset"), dict) or not isinstance(descriptions.get("patients"), list):
             raise ValueError("description must be SPARC Clinic Description Annotator Measurements json format data")
         self.cda_descriptions = descriptions
-        return self
+        return self._generate_measurements_via_cda_descriptions()
 
-    def generate_measurements_via_cda_descriptions(self):
+    def _generate_measurements_via_cda_descriptions(self):
         self.primary_measurements["research_study"] = {
             "uuid": self.cda_descriptions.get("dataset").get("uuid"),
             "name": self.cda_descriptions.get("dataset").get("name"),

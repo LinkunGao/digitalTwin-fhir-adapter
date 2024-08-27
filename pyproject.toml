@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "digitaltwin-on-fhir"
-description = "An adapter for transfer DigitalTWIN Clinic Description to FHIR Server"
+description = "An adapter for transfer DigitalTWIN Clinic Description to FHIR"
 readme = "README.md"
 license = { file = "LICENSE" }
 keywords = ["fhir", "DigitalTWIN", "SPARC", "Clinic Description"]
