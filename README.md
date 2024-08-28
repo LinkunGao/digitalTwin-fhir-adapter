@@ -1,11 +1,11 @@
-# digitalTwinOnFHIR
+# Digitaltwins on FHIR
 
 ## Usage
 
 - Setup and connect to FHIR server
 
 ```python
-from digitaltwin_on_fhir.core import Adapter
+from digitaltwins_on_fhir.core import Adapter
 
 adapter = Adapter("http://localhost:8080/fhir/")
 ```
@@ -29,15 +29,15 @@ await measurements.add_measurements_description(data).generate_resources()
 - Add Practitioner (researcher) to FHIR server
 
 ```python
-from digitaltwin_on_fhir.core.resource import Identifier, Code, HumanName, Practitioner
+from digitaltwins_on_fhir.core.resource import Identifier, Code, HumanName, Practitioner
 
 await measurements.add_practitioner(researcher=Practitioner(
-    active=True,
-    identifier=[
-        Identifier(use=Code("official"), system="sparc.org",
-                   value='sparc-d557ac68-f365-0718-c945-8722ec')],
-    name=[HumanName(use="usual", text="Xiaoming Li", family="Li", given=["Xiaoming"])],
-    gender="male"
+  active=True,
+  identifier=[
+    Identifier(use=Code("official"), system="sparc.org",
+               value='sparc-d557ac68-f365-0718-c945-8722ec')],
+  name=[HumanName(use="usual", text="Xiaoming Li", family="Li", given=["Xiaoming"])],
+  gender="male"
 ))
 ```
 

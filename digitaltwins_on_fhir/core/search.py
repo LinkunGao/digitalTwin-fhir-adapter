@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from digitaltwin_on_fhir.core.resource import ImagingStudy, Reference
+from digitaltwins_on_fhir.core.resource import ImagingStudy, Reference
 
 
 class AbstractSearch(ABC):
