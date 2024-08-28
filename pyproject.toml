@@ -31,9 +31,9 @@ requires-python = ">=3.9"
 test = ["pytest>=6.2.4"]
 
 [project.urls]
-Homepage = "https://github.com/Copper3D-brids/digitalTwinOnFHIR"
-Documentation = "https://github.com/Copper3D-brids/digitalTwinOnFHIR#readme"
-Source = "https://github.com/Copper3D-brids/digitalTwinOnFHIR.git"
+Homepage = "https://github.com/ABI-CTT-Group/digitaltwins-on-fhir"
+Documentation = "https://github.com/ABI-CTT-Group/digitaltwins-on-fhir#readme"
+Source = "https://github.com/ABI-CTT-Group/digitaltwins-on-fhir.git"
 
 [tool.coverage.report]
 exclude_also = [
