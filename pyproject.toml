@@ -10,7 +10,7 @@ license = { file = "LICENSE" }
 keywords = ["fhir", "DigitalTWIN", "SPARC", "Clinic Description"]
 dynamic = ["version"]
 authors = [{ name = "Linkun Gao", email = "gaolinkun123@gmail.com" }]
-dependencies = ["fhirpy==2.0.5", "fhir-cda==1.0.4"]
+dependencies = ["fhirpy==2.0.5", "fhir-cda"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Web Environment",
