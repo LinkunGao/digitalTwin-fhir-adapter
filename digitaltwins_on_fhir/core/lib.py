@@ -2,7 +2,7 @@ from fhirpy import AsyncFHIRClient, SyncFHIRClient
 from .operator import Operator
 from .search import Search
 from .loader import Loader
-from .digitaltwin import DigitalTwin
+from .digitaltwins import DigitalTwin
 from abc import ABC, abstractmethod
 
 

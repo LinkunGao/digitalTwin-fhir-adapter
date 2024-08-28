@@ -4,10 +4,10 @@ import fhirpy.lib
 
 from .digital_twins import AbstractDigitalTWINBase
 from datetime import datetime, timezone
-from digitaltwin_on_fhir.core.utils import transform_value
+from digitaltwins_on_fhir.core.utils import transform_value
 from fhir_cda import Annotator
 from pprint import pprint
-from digitaltwin_on_fhir.core.resource import (
+from digitaltwins_on_fhir.core.resource import (
     Code, Coding, CodeableConcept, Reference, ContactDetail, Identifier, PlanDefinition, PlanDefinitionGoal,
     PlanDefinitionAction,
     PlanDefinitionActionDefinition, DataRequirement, DataRequirementCodeFilter)

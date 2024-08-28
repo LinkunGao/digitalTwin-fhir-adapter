@@ -1,5 +1,5 @@
 import fhirpy
-import digitaltwin_on_fhir
+import digitaltwins_on_fhir
 from abc import ABC, abstractmethod
 
 
@@ -8,7 +8,7 @@ class AbstractDigitalTWINBase(ABC):
     operator = None
 
     def __init__(self, core, operator):
-        self.core: digitaltwin_on_fhir.Adapter = core
+        self.core: digitaltwins_on_fhir.Adapter = core
         self.operator = operator
         self.client: fhirpy.lib.AsyncClient = core.async_client
 
