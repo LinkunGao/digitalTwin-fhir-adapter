@@ -262,7 +262,9 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         endpoint = image.get("endpoint")
         endpoint_imagingstudy = self._generate_endpoint(identifier_value=endpoint.get("uuid"),
                                                         url=endpoint.get("url"))
+
         endpoint_image_resource = await self.operator.create(endpoint_imagingstudy).save()
+
         endpoint["resource"] = endpoint_image_resource
         endpoint["reference"] = Reference(reference=endpoint_image_resource.to_reference().reference,
                                           display="Imaging Study Endpoint")
