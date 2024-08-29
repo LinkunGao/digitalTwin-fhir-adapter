@@ -36,6 +36,33 @@ class WorkflowTool(AbstractDigitalTWINBase, ABC):
         self.descriptions.update(self.cda_descriptions.get("workflow_tool"))
         return self
 
+    def _generate_participants(self):
+        participants = []
+        if self.descriptions.get("model") and type(self.descriptions.get("model")) == list:
+            for model in self.descriptions.get("model"):
+                participants.append(
+                    DefinitionParticipant(participant_type="device",
+                                          role=CodeableConcept(
+                                              codings=[
+                                                  Coding(
+                                                      system=DIGITALTWIN_ON_FHIR_SYSTEM,
+                                                      code=Code(value=model),
+                                                      display="model")],
+                                              text=model)))
+        if self.descriptions.get("software") and type(self.descriptions.get("software")) == list:
+            for software in self.descriptions.get("software"):
+                participants.append(
+                    DefinitionParticipant(participant_type="device",
+                                          role=CodeableConcept(
+                                              codings=[
+                                                  Coding(
+                                                      system=DIGITALTWIN_ON_FHIR_SYSTEM,
+                                                      code=Code(value=software),
+                                                      display="software")],
+                                              text=software)))
+
+        return participants
+
     async def generate_resources(self):
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
                                 value=self.descriptions["uuid"])
@@ -45,30 +72,7 @@ class WorkflowTool(AbstractDigitalTWINBase, ABC):
                                                  name=self.descriptions.get("name"),
                                                  title=self.descriptions.get("title"),
                                                  description=self.descriptions.get("description"),
-                                                 participant=[
-                                                     DefinitionParticipant(participant_type="device",
-                                                                           role=CodeableConcept(
-                                                                               codings=[
-                                                                                   Coding(
-                                                                                       system=DIGITALTWIN_ON_FHIR_SYSTEM,
-                                                                                       code=Code(
-                                                                                           value=self.descriptions.get(
-                                                                                               "model")),
-                                                                                       display="model")],
-                                                                               text=self.descriptions.get(
-                                                                                   "model"))),
-                                                     DefinitionParticipant(participant_type="device",
-                                                                           role=CodeableConcept(
-                                                                               codings=[
-                                                                                   Coding(
-                                                                                       system=DIGITALTWIN_ON_FHIR_SYSTEM,
-                                                                                       code=Code(
-                                                                                           value=self.descriptions.get(
-                                                                                               "software")),
-                                                                                       display="software")],
-                                                                               text=self.descriptions.get(
-                                                                                   "software"))),
-                                                 ])
+                                                 participant=self._generate_participants())
         resource = await self.operator.create(activity_definition).save()
         self.descriptions["resource"] = resource
         self.descriptions["reference"] = Reference(reference=resource.to_reference().reference, display="Workflow tool")

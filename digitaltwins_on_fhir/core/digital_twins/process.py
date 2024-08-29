@@ -84,6 +84,8 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
             reference=workflow_resource.to_reference().reference, display=workflow_resource.get("name"))
         self.descriptions["workflow_tool"]["reference"] = Reference(
             reference=workflow_tool_resource.to_reference().reference, display=workflow_tool_resource.get("name"))
+        self.descriptions["research_study"]["reference"] = Reference(
+            reference=research_study_resource.to_reference().reference, display=research_study_resource.get("title"))
         for p in self.descriptions.get("processes"):
             patient_resource = await self.get_resource("Patient", p["patient"]["uuid"])
             p["patient"]["reference"] = Reference(patient_resource.to_reference().reference, display="Patient")
