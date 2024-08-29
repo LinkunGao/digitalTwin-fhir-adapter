@@ -3,14 +3,17 @@ from digitaltwins_on_fhir.core import Adapter, transform_value
 from digitaltwins_on_fhir.core.resource import Patient, Identifier, Code, HumanName, Practitioner, ImagingStudy
 import datetime
 from fhir_cda.ehr import Measurement
+from pathlib import Path
 from utils import tools
 from pprint import pprint
 import json
+from typing import Literal
 
 
 class Test:
-    adapter = Adapter("http://localhost:8080/fhir/")
-    # adapter = Adapter("http://130.216.217.173:8080/fhir")
+    # adapter = Adapter("http://localhost:8080/fhir/")
+
+    adapter = Adapter("http://130.216.217.173:8080/fhir")
 
     async def test_load_bundle(self):
         # TODO 1: test load bundle dataset
@@ -36,7 +39,7 @@ class Test:
 
     async def test_measurements_analysis_dataset(self):
         measurements = self.adapter.digital_twin().measurements()
-        annotator = measurements.analysis_dataset("./dataset/dataset-sparc")
+        annotator = measurements.analysis_dataset("./dataset/measurements")
         m1 = Measurement(value="0.15", code="21889-1", units="cm")
         m2 = Measurement(value="0.15", code="21889-1", units="cm", code_system="http://loinc.org",
                          units_system="http://unitsofmeasure.org")
@@ -53,9 +56,11 @@ class Test:
         # pprint(measurements.primary_measurements)
         # await measurements.generate_resources()
 
-    async def test_measurements_load_json_description(self):
+    async def test_measurements_load_json_description(self, root):
+        # dataset/ep4/measurements/
+        root = Path(root)
         measurements = self.adapter.digital_twin().measurements()
-        with open('./dataset/dataset-sparc/measurements.json', 'r') as file:
+        with open(root / 'measurements.json', 'r') as file:
             data = json.load(file)
 
         await measurements.add_practitioner(researcher=Practitioner(
@@ -70,30 +75,44 @@ class Test:
         await measurements.add_measurements_description(data).generate_resources()
         # pprint(measurements.primary_measurements)
 
-    async def test_workflow_tool_load_json_description(self):
+    async def test_workflow_tool_load_json_description(self, root):
+        root = Path(root)
+        subfolders = [entry for entry in root.iterdir() if entry.is_dir()]
         workflow_tool = self.adapter.digital_twin().workflow_tool()
-        for i in range(7):
-            with open(f'./dataset/tools/dataset-workflow-tool-{i + 1}/workflow_tool.json', 'r') as file:
+
+        for folder in subfolders:
+            with open(folder / 'workflow_tool.json', 'r') as file:
                 data = json.load(file)
             await workflow_tool.add_workflow_tool_description(data).generate_resources()
         pprint(workflow_tool.descriptions)
 
-    async def test_workflow_load_json_description(self):
+    async def test_workflow_load_json_description(self, root):
+        root = Path(root)
         workflow = self.adapter.digital_twin().workflow()
-        with open('./dataset/dataset-workflow-ep4/workflow_fhir.json', 'r') as file:
+        with open(root / 'workflow_fhir.json', 'r') as file:
             data = json.load(file)
 
         await workflow.add_workflow_description(data).generate_resources()
 
-    async def test_workflow_tool_process_load_json_description(self):
+    async def test_workflow_tool_process_load_json_description(self, root):
         process = self.adapter.digital_twin().process()
-
-        for i in range(7):
-            with open(f'./dataset/process/dataset-workflow-tool-process-{i + 1}/workflow_tool_process.json',
-                      'r') as file:
+        subfolders = [entry for entry in root.iterdir() if entry.is_dir()]
+        for folder in subfolders:
+            with open(folder / 'workflow_tool_process.json','r') as file:
                 data = json.load(file)
             await process.add_workflow_tool_process_description(data).generate_resources()
         pprint(process.descriptions)
+
+    async def setup_digitaltwins(self, ep: Literal["ep1", "ep4"]):
+        measurements_root = Path(f"./dataset/{ep}/measurements")
+        tools_root = Path(f"./dataset/{ep}/tools")
+        workflows_root = Path(f"./dataset/{ep}/workflow")
+        process_root = Path(f"./dataset/{ep}/process")
+        # setup measurements
+        await self.test_measurements_load_json_description(measurements_root)
+        await self.test_workflow_tool_load_json_description(tools_root)
+        await self.test_workflow_load_json_description(workflows_root)
+        await self.test_workflow_tool_process_load_json_description(process_root)
 
     async def test_search_digital_twin(self):
         # workflow uuid: sparc-workflow-uuid-001
@@ -198,8 +217,7 @@ class Test:
         print("Step 5, Now we find the interested observation is related to this dataset: ", dataset)
 
 
-
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(test.test_search_digital_twin())
+    loop.run_until_complete(test.setup_digitaltwins("ep1"))
