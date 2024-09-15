@@ -133,6 +133,45 @@ for output in outputs:
     workflow_tool_processes = await client.resources("Task").search(
                                         subject=workflow.to_reference()).fetch_all()
     ```
+## Reference in resource
+- `Patient`
+  - generalPractitioner: [ Practitioner reference ]
+- `ResearchSubject`
+  - individual: Patient reference
+  - study: ResearchStudy reference
+  - consent: Consent reference
+- `ResearchStudy`
+  - principalInvestigator: Practitioner reference
+- `Composition` - primary measurements
+  - author: [ Patient reference, Practitioner reference ]
+  - subject: ResearchStudy reference
+  - entry: [ Observation reference, ImagingStudy reference]
+- `ImagingStudy`
+  - subject: Patient reference
+  - endpoint: [ Endpoint Reference ]
+  - referrer: Practitioner reference
+- `Observation` - primary measurements
+  - subject: Patient reference
+- `PlanDefinition`:
+  - action.definitionCanonical: ActivityDefinition reference string
+- `ActivityDefinition`:
+  - participant: [ software uuid, model uuid]
+- `Task`:
+  - owner: patient reference 
+  - for: workflow reference
+  - focus: workflow tool reference
+  - basedOn: research subject reference
+  - requester (Optional): practitioner reference
+  - input: [ Observation reference, ImagingStudy reference ]
+  - output: [ Observation reference, ImagingStudy reference ]
+- `Composition` - workflow tool result
+  - author: Patient reference
+  - subject: Task (workflow tool process) reference
+  - section:
+    - entry: Observations
+    - focus: ActivityDefinition (workflow tool) reference
+- `Observation` - workflow tool result
+  - focus: [ActivityDefinition reference]
 
 ## DigitalTWIN on FHIR Diagram
 ![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/v1.0.1.png)
