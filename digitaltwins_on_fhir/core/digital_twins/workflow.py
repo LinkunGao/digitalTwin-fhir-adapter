@@ -77,7 +77,7 @@ class Workflow(AbstractDigitalTWINBase, ABC):
             g in self.descriptions.get("goal") if
             g is not None]
 
-        actions = await self._generate_actions(self.descriptions.get("actions"))
+        actions = await self._generate_actions(self.descriptions.get("action"))
 
         plan_definition = PlanDefinition(identifier=[identifier], status="active",
                                          version=self.descriptions.get("version"),
