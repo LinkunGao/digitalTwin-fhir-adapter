@@ -22,6 +22,15 @@ class ObservationEffective:
         }
         return {k: v for k, v in effective.items() if v not in ("", None)}
 
+    def convert(self, fhir_resource):
+        if fhir_resource is None:
+            return None
+        self.effective_date_time = fhir_resource.get("effectiveDateTime")
+        self.effective_period = Period().convert(fhir_resource.get("effectivePeriod"))
+        self.effective_timing = Timing().convert(fhir_resource.get("effectiveTiming"))
+        self.effective_instant = fhir_resource.get("effectiveInstant")
+        return self
+
 
 class ObservationValue:
 
@@ -100,6 +109,23 @@ class ObservationValue:
         }
         return {k: v for k, v in value.items() if v not in ("", None)}
 
+    def convert(self, fhir_ob_value):
+        if fhir_ob_value is None:
+            return None
+        self.value_quantity = Quantity().convert(fhir_ob_value.get("valueQuantity"))
+        self.value_codeable_concept = CodeableConcept().convert(fhir_ob_value.get("valueCodeableConcept"))
+        self.value_string = fhir_ob_value.get("valueString")
+        self.value_boolean = fhir_ob_value.get("valueBoolean")
+        self.value_integer = fhir_ob_value.get("valueInteger")
+        self.value_range = Range().convert(fhir_ob_value.get("valueRange"))
+        self.value_ratio = Ratio().convert(fhir_ob_value.get("valueRatio"))
+        self.value_sampled_data = SampledData(origin='', period=0, dimensions=0).convert(
+            fhir_ob_value.get("valueSampledData"))
+        self.value_time = fhir_ob_value.get("valueTime")
+        self.value_date_time = fhir_ob_value.get("valueDateTime")
+        self.value_period = Period().convert(fhir_ob_value.get("valuePeriod"))
+        return self
+
 
 class ObservationReferenceRange:
     def __init__(self, low: Optional[str] = None, high: Optional[str] = None,
@@ -124,6 +150,18 @@ class ObservationReferenceRange:
             "text": self.text if isinstance(self.text, str) else None
         }
         return {k: v for k, v in reference_range.items() if v not in ("", None, [])}
+
+    def convert(self, fhir_ob_reference_range):
+        if fhir_ob_reference_range is None:
+            return None
+        self.low = fhir_ob_reference_range.get("low")
+        self.high = fhir_ob_reference_range.get("high")
+        self.reference_range_type = CodeableConcept().convert(fhir_ob_reference_range.get("type"))
+        self.applies_to = [CodeableConcept().convert(a) for a in fhir_ob_reference_range.get("appliesTo") if
+                           a is not None] if isinstance(fhir_ob_reference_range.get("appliesTo"), list) else None
+        self.age = Range().convert(fhir_ob_reference_range.get("age"))
+        self.text = fhir_ob_reference_range.get("text")
+        return self
 
 
 class ObservationComponent:
@@ -171,6 +209,30 @@ class ObservationComponent:
                                                                                        list) else None
         }
         return {k: v for k, v in component.items() if v not in ("", None, [])}
+
+    def convert(self, fhir_ob_component):
+        if fhir_ob_component is None:
+            return None
+        self.code = CodeableConcept().convert(fhir_ob_component.get("code"))
+        self.value = ObservationValue().convert({
+            "valueQuantity": fhir_ob_component.get("valueQuantity"),
+            "valueCodeableConcept": fhir_ob_component.get("valueCodeableConcept"),
+            "valueString": fhir_ob_component.get("valueString"),
+            "valueBoolean": fhir_ob_component.get("valueBoolean"),
+            "valueInteger": fhir_ob_component.get("valueInteger"),
+            "valueRange": fhir_ob_component.get("valueRange"),
+            "valueRatio": fhir_ob_component.get("valueRatio"),
+            "valueSampledData": fhir_ob_component.get("valueSampledData"),
+            "valueTime": fhir_ob_component.get("valueTime"),
+            "valueDateTime": fhir_ob_component.get("valueDateTime"),
+            "valuePeriod": fhir_ob_component.get("valuePeriod")
+        })
+        self.data_absent_reason = CodeableConcept().convert(fhir_ob_component.get("dataAbsentReason"))
+        self.interpretation = [CodeableConcept().convert(i) for i in fhir_ob_component.get("interpretation") if
+                               i is not None] if isinstance(fhir_ob_component.get("interpretation"), list) else None
+        self.reference_range = [ObservationReferenceRange().convert(r) for r in fhir_ob_component.get("referenceRange")
+                                if r is not None] if isinstance(fhir_ob_component.get("referenceRange"), list) else None
+        return self
 
 
 class Observation(AbstractResource, ABC):
@@ -288,4 +350,62 @@ class Observation(AbstractResource, ABC):
         return {k: v for k, v in observation.items() if v not in ("", None, [])}
 
     def convert(self, fhirpy_resource):
-        pass
+        if fhirpy_resource is None:
+            return None
+        self.meta = Meta().convert(fhirpy_resource.get("meta"))
+        self.identifier = [Identifier().convert(i) for i in fhirpy_resource.get("identifier", []) if
+                           i is not None] or None
+        self.status = fhirpy_resource.get("status")
+        self.code = CodeableConcept().convert(fhirpy_resource.get("code"))
+        self.category = [CodeableConcept().convert(c) for c in fhirpy_resource.get("category", []) if
+                         c is not None] or None
+        self.based_on = [Reference().convert(b) for b in fhirpy_resource.get("basedOn", []) if
+                         b is not None] or None
+        self.part_of = [Reference().convert(b) for b in fhirpy_resource.get("partOf", []) if
+                        b is not None] or None
+        self.subject = Reference().convert(fhirpy_resource.get("subject"))
+        self.focus = [Reference().convert(b) for b in fhirpy_resource.get("basedOn", []) if
+                      b is not None] or None
+        self.encounter = Reference().convert(fhirpy_resource.get("encounter"))
+        self.effective = ObservationEffective().convert({
+            "effectiveDateTime": fhirpy_resource.get("effectiveDateTime"),
+            "effectivePeriod": fhirpy_resource.get("effectivePeriod"),
+            "effectiveTiming": fhirpy_resource.get("effectiveTiming"),
+            "effectiveInstant": fhirpy_resource.get("effectiveInstant")
+        })
+        self.issued = fhirpy_resource.get("issued")
+        self.performer = [Reference().convert(p) for p in fhirpy_resource.get("performer", []) if
+                          p is not None] or None
+        self.value = ObservationValue().convert({
+            "valueQuantity": fhirpy_resource.get("valueQuantity"),
+            "valueCodeableConcept": fhirpy_resource.get("valueCodeableConcept"),
+            "valueString": fhirpy_resource.get("valueString"),
+            "valueBoolean": fhirpy_resource.get("valueBoolean"),
+            "valueInteger": fhirpy_resource.get("valueInteger"),
+            "valueRange": fhirpy_resource.get("valueRange"),
+            "valueRatio": fhirpy_resource.get("valueRatio"),
+            "valueSampledData": fhirpy_resource.get("valueSampledData"),
+            "valueTime": fhirpy_resource.get("valueTime"),
+            "valueDateTime": fhirpy_resource.get("valueDateTime"),
+            "valuePeriod": fhirpy_resource.get("valuePeriod")
+        })
+        self.data_absent_reason = CodeableConcept().convert(fhirpy_resource.get("data_absent_reason"))
+        self.interpretation = [CodeableConcept().convert(c) for c in fhirpy_resource.get("interpretation", []) if
+                               c is not None] if isinstance(fhirpy_resource.get("interpretation"), list) else None
+        self.note = [Annotation(text='').convert(a) for a in fhirpy_resource.get("note", []) if
+                     a is not None] if isinstance(fhirpy_resource.get("note"), list) else None
+        self.body_site = CodeableConcept().convert(fhirpy_resource.get("bodySite"))
+        self.method = CodeableConcept().convert(fhirpy_resource.get("method"))
+        self.specimen = Reference().convert(fhirpy_resource.get("specimen"))
+        self.device = Reference().convert(fhirpy_resource.get("device"))
+        self.reference_range = [ObservationReferenceRange().convert(r) for r in fhirpy_resource.get("referenceRange") if
+                                r is not None] if isinstance(fhirpy_resource.get('referenceRange'), list) else None
+        self.has_member = [Reference().convert(h) for h in fhirpy_resource.get("hasMember") if
+                           h is not None] if isinstance(fhirpy_resource.get('hasMember'), list) else None
+        self.derived_from = [Reference().convert(d) for d in fhirpy_resource.get("derivedFrom") if
+                             d is not None] if isinstance(fhirpy_resource.get('derivedFrom'), list) else None
+        self.component = [ObservationComponent(code=CodeableConcept()).convert(c) for c in
+                          fhirpy_resource.get("component") if c is not None] if isinstance(
+            fhirpy_resource.get('component'), list) else None
+
+        return self
