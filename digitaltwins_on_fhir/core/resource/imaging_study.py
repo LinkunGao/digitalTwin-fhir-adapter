@@ -113,7 +113,7 @@ class ImagingStudySeries:
         self.instance = [ImagingStudyInstance("", Coding()).convert(i) for i in fhirpy_series.get("instance", []) if
                          i is not None] or None
 
-        return None
+        return self
 
 
 class ImagingStudy(AbstractResource, ABC):

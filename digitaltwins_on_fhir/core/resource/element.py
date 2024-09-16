@@ -323,6 +323,16 @@ class Quantity:
         }
         return {k: v for k, v in quantity.items() if v not in ("", None)}
 
+    def convert(self, fhir_quantity):
+        if fhir_quantity is None:
+            return None
+        self.value = fhir_quantity.get('value')
+        self.comparator = fhir_quantity.get('comparator')
+        self.unit = fhir_quantity.get('unit')
+        self.system = fhir_quantity.get('system')
+        self.code = fhir_quantity.get('code')
+        return self
+
 
 class Range:
 
@@ -336,6 +346,13 @@ class Range:
             "high": self.high if isinstance(self.high, float) else None
         }
         return {k: v for k, v in _range.items() if v not in ("", None)}
+
+    def convert(self, fhir_range):
+        if fhir_range is None:
+            return None
+        self.low = fhir_range.get("low")
+        self.high = fhir_range.get("high")
+        return self
 
 
 class RelatedArtifact:
@@ -430,6 +447,15 @@ class RepeatBounds:
         }
         return {k: v for k, v in bounds.items() if v not in ("", None)}
 
+    def convert(self, fhirpy_repeatbounds):
+        if fhirpy_repeatbounds is None:
+            return None
+        self.bounds_duration = fhirpy_repeatbounds.get("boundsDuration")
+        self.bounds_range = Range().convert(fhirpy_repeatbounds.get("boundsRange"))
+        self.bounds_period = Period().convert(fhirpy_repeatbounds.get("boundsPeriod"))
+
+        return self
+
 
 class Repeat:
 
@@ -488,6 +514,30 @@ class Repeat:
         }
         return {k: v for k, v in repeat.items() if v not in ("", None, [])}
 
+    def convert(self, fhir_repeat):
+        if fhir_repeat is None:
+            return None
+        self.bounds = RepeatBounds().convert(
+            {"boundsDuration": fhir_repeat.get("boundsDuration"),
+             "boundsRange": fhir_repeat.get("boundsRange"),
+             "boundsPeriod": fhir_repeat.get("boundsPeriod")})
+        self.count = fhir_repeat.get("count")
+        self.count_max = fhir_repeat.get("countMax")
+        self.duration = fhir_repeat.get("duration")
+        self.duration_max = fhir_repeat.get("durationMax")
+        self.duration_unit = fhir_repeat.get("durationUnit")
+        self.frequency = fhir_repeat.get("frequency")
+        self.frequency_max = fhir_repeat.get("frequencyMax")
+        self.period = fhir_repeat.get("period")
+        self.period_max = fhir_repeat.get("periodMax")
+        self.period_unit = fhir_repeat.get("periodUnit")
+        self.day_of_week = fhir_repeat.get("dayOfWeek")
+        self.time_of_day = fhir_repeat.get("timeOfDay")
+        self.when = [Code().convert(w) for w in fhir_repeat.get("when") if w is not None] if isinstance(
+            fhir_repeat.get("when"), list) else None
+        self.offset = fhir_repeat.get("offset")
+        return self
+
 
 class Timing:
 
@@ -505,6 +555,14 @@ class Timing:
         }
         return {k: v for k, v in timing.items() if v not in ("", None, [])}
 
+    def convert(self, fhir_timing):
+        if fhir_timing is None:
+            return None
+        self.event = fhir_timing.get("event") if isinstance(self.event, list) else None
+        self.repeat = Repeat().convert(fhir_timing.get("repeat"))
+        self.code = CodeableConcept().convert(fhir_timing.get("code"))
+        return self
+
 
 class Ratio:
 
@@ -519,6 +577,12 @@ class Ratio:
         }
         return {k: v for k, v in ratio.items() if v not in ("", None)}
 
+    def convert(self, fhir_ratio):
+        if fhir_ratio is None:
+            return None
+        self.numerator = Quantity().convert(fhir_ratio.get("numerator"))
+        self.denominator = Quantity().convert(fhir_ratio.get("denominator"))
+        return self
 
 class SampledData:
 
@@ -543,6 +607,18 @@ class SampledData:
             "data": self.data if isinstance(self.data, str) else None
         }
         return {k: v for k, v in sampled_data.items() if v not in ("", None)}
+
+    def convert(self, fhir_sampled_data):
+        if fhir_sampled_data is None:
+            return None
+        self.origin = fhir_sampled_data.get("origin")
+        self.period = fhir_sampled_data.get("period")
+        self.dimensions = fhir_sampled_data.get("dimensions")
+        self.factor = fhir_sampled_data.get("factor")
+        self.lower_limit = fhir_sampled_data.get("lowerLimit")
+        self.upper_limit = fhir_sampled_data.get("upperLimit")
+        self.data = fhir_sampled_data.get("data")
+        return self
 
 
 class UsageContextValue:
