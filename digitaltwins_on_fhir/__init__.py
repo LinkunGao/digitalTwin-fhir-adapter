@@ -1,7 +1,7 @@
 from .core import Adapter
 
 __title__ = "digitaltwins-on-fhir"
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __author__ = "Linkun Gao"
 __license__ = "Apache-2.0"
 __copyright__ = "Copyright 2024 ABI"
