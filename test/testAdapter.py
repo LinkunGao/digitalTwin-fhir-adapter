@@ -1,6 +1,6 @@
 import asyncio
 from digitaltwins_on_fhir.core import Adapter, transform_value
-from digitaltwins_on_fhir.core.resource import Patient, Identifier, Code, HumanName, Practitioner, ImagingStudy
+from digitaltwins_on_fhir.core.resource import Patient, CodeableConcept, Coding, Code, Reference, Identifier, Code, HumanName, Practitioner, ImagingStudy, DiagnosticReport
 import datetime
 from fhir_cda.ehr import Measurement
 from pathlib import Path
@@ -11,9 +11,9 @@ from typing import Literal
 
 
 class Test:
-    # adapter = Adapter("http://localhost:8080/fhir/")
+    adapter = Adapter("http://localhost:8080/fhir/")
 
-    adapter = Adapter("http://130.216.217.173:8080/fhir")
+    # adapter = Adapter("http://130.216.217.173:8080/fhir")
 
     async def test_load_bundle(self):
         # TODO 1: test load bundle dataset
@@ -98,7 +98,7 @@ class Test:
         process = self.adapter.digital_twin().process()
         subfolders = [entry for entry in root.iterdir() if entry.is_dir()]
         for folder in subfolders:
-            with open(folder / 'workflow_tool_process.json','r') as file:
+            with open(folder / 'workflow_tool_process.json', 'r') as file:
                 data = json.load(file)
             await process.add_workflow_tool_process_description(data).generate_resources()
         pprint(process.descriptions)
@@ -113,6 +113,48 @@ class Test:
         await self.test_workflow_tool_load_json_description(tools_root)
         await self.test_workflow_load_json_description(workflows_root)
         await self.test_workflow_tool_process_load_json_description(process_root)
+
+    async def test_generate_report(self, patient_uuid, workflow_tool_uuid, workflow_uuid, dataset_uuid):
+        # patient 9992d294-65b1-11ef-917d-484d7e9beb16
+        # workflow f51edde2-65b1-11ef-917d-484d7e9beb16
+        # workflow_tool b6b7b363-65ae-11ef-917d-484d7e9beb16
+        # dataset 7c80c900-65b0-11ef-917d-484d7e9beb16
+        client = self.adapter.async_client
+        patient = await self.adapter.search().search_resource_async('Patient', patient_uuid)
+        workflow = await self.adapter.search().search_resource_async("PlanDefinition", workflow_uuid)
+        workflow_tool = await self.adapter.search().search_resource_async("ActivityDefinition", workflow_tool_uuid)
+        dataset = await self.adapter.search().search_resource_async("ResearchStudy", dataset_uuid)
+
+        research_subject = await client.resources("ResearchSubject").search(patient=patient.to_reference(),
+                                                                            study=dataset.to_reference()).first()
+
+        processes = await client.resources("Task").search(owner=patient.to_reference(),
+                                                          subject=workflow.to_reference(),
+                                                          focus=workflow_tool.to_reference(),
+                                                          based_on=research_subject.to_reference()).fetch_all()
+
+        report_process = processes[0]
+        obs = []
+        for item in report_process.get("output"):
+            if item.get("type").get("text") == "Observation":
+                ob = await item.get("valueReference").to_resource()
+                obs.append(Reference(reference=item.get("valueReference").reference, display=ob.get("code").get("text")))
+
+        report = DiagnosticReport(status="final",
+                                  identifier=[
+                                      Identifier(use=Code("official"), system="sparc.org",
+                                                 value='sparc-breast-workflow-report-xxx-001')],
+                                  code=CodeableConcept(codings=[Coding(system="https://www.auckland.ac.nz/en/abi.html",
+                                                                       code=Code(value="Workflow report"),
+                                                                       display="Workflow report")],
+                                                       text="Workflow report"),
+                                  subject=patient.to_reference(),
+                                  result=obs,
+                                  conclusion="This is a report for breast")
+        process = self.adapter.digital_twin().process()
+        r = await process.generate_diagnostic_report(report)
+
+        print(r)
 
     async def test_search_digital_twin(self):
         # workflow uuid: sparc-workflow-uuid-001
@@ -220,4 +262,8 @@ class Test:
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(test.setup_digitaltwins("ep1"))
+    # loop.run_until_complete(test.setup_digitaltwins("ep1"))
+    loop.run_until_complete(test.test_generate_report(patient_uuid="54f2abff-6594-11ef-917d-484d7e9beb16",
+                                                      workflow_uuid="e3b3eaa0-65ae-11ef-917d-484d7e9beb16",
+                                                      workflow_tool_uuid="b6b7b363-65ae-11ef-917d-484d7e9beb16",
+                                                      dataset_uuid="93d49efa-5f4e-11ef-917d-484d7e9beb16"))
