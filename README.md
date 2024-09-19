@@ -137,7 +137,7 @@ for output in outputs:
 - `Patient`
   - generalPractitioner: [ Practitioner reference ]
 - `ResearchSubject`
-  - individual: Patient reference
+  - individual(patient): Patient reference
   - study: ResearchStudy reference
   - consent: Consent reference
 - `ResearchStudy`
@@ -158,7 +158,7 @@ for output in outputs:
   - participant: [ software uuid, model uuid]
 - `Task`:
   - owner: patient reference 
-  - for: workflow reference
+  - for(subject): workflow reference
   - focus: workflow tool reference
   - basedOn: research subject reference
   - requester (Optional): practitioner reference
@@ -174,4 +174,4 @@ for output in outputs:
   - focus: [ActivityDefinition reference]
 
 ## DigitalTWIN on FHIR Diagram
-![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/v1.0.1.png)
+![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/vlatest.png)

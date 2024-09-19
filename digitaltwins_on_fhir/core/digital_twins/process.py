@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from digitaltwins_on_fhir.core.utils import transform_value
 from digitaltwins_on_fhir.core.resource import (Identifier, ObservationValue, Observation, CodeableConcept,
                                                 Code, Coding, Reference, Task, TaskInputOutput, Composition,
-                                                CompositionSection)
+                                                CompositionSection, DiagnosticReport)
 from .knowledgebase import DIGITALTWIN_ON_FHIR_SYSTEM
 from typing import Dict, Any, List
 
@@ -15,6 +15,10 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
         self.cda_descriptions = None
 
         super().__init__(core, operator)
+
+    async def generate_diagnostic_report(self, report: DiagnosticReport):
+        resource = await self.operator.create(report).save()
+        return resource
 
     def add_workflow_tool_process_description(self, descriptions):
         """
