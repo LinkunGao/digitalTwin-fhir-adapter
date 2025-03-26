@@ -18,8 +18,6 @@ class Measurements(AbstractDigitalTWINBase, ABC):
     def __init__(self, core, operator):
         self.primary_measurements: Dict[str, Any] = {}
         self.cda_descriptions = None
-        self._practitioner = None
-        self._practitioner_ref = None
         super().__init__(core, operator)
 
     def analysis_dataset(self, dataset_path):
@@ -40,12 +38,6 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         return self._generate_measurements_via_cda_descriptions()
 
     def _generate_measurements_via_cda_descriptions(self):
-        self.primary_measurements["research_study"] = {
-            "uuid": self.cda_descriptions.get("dataset").get("uuid"),
-            "name": self.cda_descriptions.get("dataset").get("name"),
-            "resource": None,
-            "reference": ""
-        }
         self.primary_measurements["patients"] = []
         for patient in self.cda_descriptions.get("patients"):
             data = {
@@ -64,7 +56,8 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                     }
                 },
                 "composition": {
-                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{patient.get('uuid')}_Primary_Measurements_Composition",
+                    "uuid": self.cda_descriptions.get("dataset").get("uuid"),
+                    "title": self.cda_descriptions.get("dataset").get("name"),
                     "resource": None,
                     "reference": "",
                     "observations": [],
@@ -125,34 +118,30 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         return self
 
     async def generate_resources(self):
-        if self.primary_measurements["practitioner"]["resource"] is None:
-            print("Please provide researcher/practitioner info first! - via add_practitioner method")
-            return
 
         # Generate ResearchStudy
-        await self._generate_research_study()
+        # await self._generate_research_study()
         # Generate Patient
         await self._generate_patients()
 
         return self
 
-    async def _generate_research_study(self):
-        identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
-                                value=self.primary_measurements["research_study"]["uuid"])
-        research_study = ResearchStudy(status="active", title=self.primary_measurements["research_study"]["name"],
-                                       identifier=[identifier], principal_investigator=self._practitioner_ref)
-        resource = await self.operator.create(research_study).save()
-        self.primary_measurements["research_study"]["resource"] = resource
-        self.primary_measurements["research_study"][
-            "reference"] = Reference(
-            reference=resource.to_reference().reference, display="Original dataset")
+    # async def _generate_research_study(self):
+    #     identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
+    #                             value=self.primary_measurements["research_study"]["uuid"])
+    #     research_study = ResearchStudy(status="active", title=self.primary_measurements["research_study"]["name"],
+    #                                    identifier=[identifier], principal_investigator=self._practitioner_ref)
+    #     resource = await self.operator.create(research_study).save()
+    #     self.primary_measurements["research_study"]["resource"] = resource
+    #     self.primary_measurements["research_study"][
+    #         "reference"] = Reference(
+    #         reference=resource.to_reference().reference, display="Original dataset")
 
     async def _generate_patients(self):
         for p in self.primary_measurements["patients"]:
             identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM, value=p["uuid"])
             patient = Patient(active=True, identifier=[identifier],
-                              name=[HumanName(use="usual", text=p.get("name"), given=[p.get("name")])],
-                              general_practitioner=[self._practitioner_ref])
+                              name=[HumanName(use="usual", text=p.get("name"), given=[p.get("name")])])
             resource = await self.operator.create(patient).save()
             p["resource"] = resource
             p["reference"] = Reference(reference=resource.to_reference().reference,
@@ -171,12 +160,11 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
                                 value=patient.get("research_subject").get("consent").get("uuid"))
         consent = Consent(identifier=[identifier], status="active", scope=ConsentScopeCodeableConcept.get("research"),
-                          category=[ConsentCategoryCodeableConcept.get("research")], patient=patient.get("reference"),
-                          performer=[self._practitioner_ref])
+                          category=[ConsentCategoryCodeableConcept.get("research")], patient=patient.get("reference"))
         resource = await self.operator.create(consent).save()
         patient["research_subject"]["consent"]["resource"] = resource
         patient["research_subject"]["consent"]["reference"] = Reference(reference=resource.to_reference().reference,
-                                                                        display=f"Consent for patient {patient.get('name')} in dataset {self.primary_measurements['research_study']['name']}")
+                                                                        display=f"Consent for patient {patient.get('name')} in dataset {patient.get('composition').get('title')}")
 
     async def _generate_research_subject(self, patient):
         """
@@ -187,13 +175,12 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         """
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM, value=patient.get("research_subject").get("uuid"))
         research_subject = ResearchSubject(identifier=[identifier], status="on-study",
-                                           study=self.primary_measurements["research_study"]["reference"],
                                            individual=patient.get("reference"),
                                            consent=patient.get("research_subject").get("consent").get("reference"))
         resource = await self.operator.create(research_subject).save()
         patient["research_subject"]["resource"] = resource
         patient["research_subject"]["reference"] = Reference(reference=resource.to_reference().reference,
-                                                             display=f"Research Subject for patient {patient.get('name')} in dataset {self.primary_measurements['research_study']['name']}")
+                                                             display=f"Research Subject for patient {patient.get('name')} in dataset {patient.get('composition').get('title')}")
 
     async def _generate_primary_observation(self, patient, observation):
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM, value=observation.get("uuid"))
@@ -225,15 +212,13 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         c = Composition(
             identifier=[identifier],
             status="final",
+            title=composition.get("title"),
             composition_type=CodeableConcept(codings=[
                 Coding(system=DIGITALTWIN_ON_FHIR_SYSTEM, code=Code(value="primary measurements"),
                        display="primary measurements")], text="primary measurements"),
-            title="primary measurements",
-            subject=self.primary_measurements.get("research_study").get("reference"),
+            subject=patient.get("research_subject").get("reference"),
             date=transform_value(datetime.now(timezone.utc)),
-            author=[patient.get("reference"), self._practitioner_ref],
-            attester=[CompositionAttester(mode="official", time=transform_value(datetime.now(timezone.utc)),
-                                          party=self._practitioner_ref)],
+            author=[patient.get("reference")],
             section=[CompositionSection(
                 title="primary measurements",
                 entry=entry,
@@ -281,7 +266,6 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                                      started=transform_value(datetime.now(timezone.utc)),
                                      subject=patient.get("reference"),
                                      endpoint=[endpoint.get("reference")],
-                                     referrer=self._practitioner_ref,
                                      number_of_series=number_of_series,
                                      number_of_instances=number_of_instances,
                                      series=result["series"]

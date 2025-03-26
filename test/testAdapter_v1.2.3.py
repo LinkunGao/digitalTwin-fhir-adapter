@@ -1,6 +1,7 @@
 import asyncio
 from digitaltwins_on_fhir.core import Adapter, transform_value
-from digitaltwins_on_fhir.core.resource import Patient, CodeableConcept, Coding, Code, Reference, Identifier, Code, HumanName, Practitioner, ImagingStudy, DiagnosticReport
+from digitaltwins_on_fhir.core.resource import Patient, CodeableConcept, Coding, Reference, Identifier, Code, \
+    HumanName, Practitioner, ImagingStudy, DiagnosticReport
 import datetime
 from fhir_cda.ehr import Measurement
 from pathlib import Path
@@ -8,6 +9,22 @@ from utils import tools
 from pprint import pprint
 import json
 from typing import Literal
+from fpdf import FPDF
+
+
+class PDF(FPDF):
+
+    def set_title(self, title):
+        self.title = title
+
+    def header(self):
+        self.set_font('Arial', 'B', 12)
+        self.cell(0, 10, self.title, 0, 1, 'C')
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
 
 
 class Test:
@@ -115,10 +132,10 @@ class Test:
         await self.test_workflow_tool_process_load_json_description(process_root)
 
     async def test_generate_report(self, patient_uuid, workflow_tool_uuid, workflow_uuid, dataset_uuid):
-        # patient 9992d294-65b1-11ef-917d-484d7e9beb16
-        # workflow f51edde2-65b1-11ef-917d-484d7e9beb16
+        # patient 54f2abff-6594-11ef-917d-484d7e9beb16
+        # workflow e3b3eaa0-65ae-11ef-917d-484d7e9beb16
         # workflow_tool b6b7b363-65ae-11ef-917d-484d7e9beb16
-        # dataset 7c80c900-65b0-11ef-917d-484d7e9beb16
+        # dataset 93d49efa-5f4e-11ef-917d-484d7e9beb16
         client = self.adapter.async_client
         patient = await self.adapter.search().search_resource_async('Patient', patient_uuid)
         workflow = await self.adapter.search().search_resource_async("PlanDefinition", workflow_uuid)
@@ -138,7 +155,8 @@ class Test:
         for item in report_process.get("output"):
             if item.get("type").get("text") == "Observation":
                 ob = await item.get("valueReference").to_resource()
-                obs.append(Reference(reference=item.get("valueReference").reference, display=ob.get("code").get("text")))
+                obs.append(
+                    Reference(reference=item.get("valueReference").reference, display=ob.get("code").get("text")))
 
         report = DiagnosticReport(status="final",
                                   identifier=[
@@ -154,7 +172,19 @@ class Test:
         process = self.adapter.digital_twin().process()
         r = await process.generate_diagnostic_report(report)
 
-        print(r)
+        pdf = PDF('P', 'mm', 'A4')
+        pdf.set_title("Breast workflow report")
+        pdf.add_page()
+        pdf.set_font('Arial', '', 10)
+        pdf.cell(0, 10, f'Patient uuid: {patient_uuid}', 0, 1, 'L')
+        pdf.cell(0, 10, f'Workflow: {workflow.get("title")}, uuid: {workflow_uuid}', 0, 1, 'L')
+        pdf.multi_cell(0, 10, f'Workflow description: {workflow.get("description")}', 0, 1, 'L')
+        pdf.cell(0, 10, f'Execute time: {report_process.get("lastModified")}', 0, 1, 'L')
+        pdf.cell(0, 10, f'Results:', 0, 1, 'L')
+        for result in r.get('result'):
+            ob = await result.to_resource()
+            pdf.cell(400, 10, f'{ob.get("code").get("text")}: {ob.get("valueQuantity").get("value")} {ob.get("valueQuantity").get("unit")}', 0, 1, 'L')
+        pdf.output('Breast workflow result.pdf')
 
     async def test_search_digital_twin(self):
         # workflow uuid: sparc-workflow-uuid-001

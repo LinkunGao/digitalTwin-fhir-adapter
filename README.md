@@ -136,9 +136,9 @@ for output in outputs:
 ## Reference in resource
 - `Patient`
   - generalPractitioner: [ Practitioner reference ]
-- `ResearchSubject`
+- `ResearchSubject` - primary measurements
   - individual(patient): Patient reference
-  - study: ResearchStudy reference
+  - study: None
   - consent: Consent reference
 - `ResearchStudy`
   - principalInvestigator: Practitioner reference
@@ -173,5 +173,11 @@ for output in outputs:
 - `Observation` - workflow tool result
   - focus: [ActivityDefinition reference]
 
+## Workflow
+- Upload measurements dataset (primary measurements)
+- Upload workflow / workflow tools
+- Create Assay (get practitioner, study, and workflow process information)
+
 ## DigitalTWIN on FHIR Diagram
 ![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/vlatest.png)
+
