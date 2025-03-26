@@ -41,34 +41,6 @@ class Workflow(AbstractDigitalTWINBase, ABC):
         self.descriptions.update(self.cda_descriptions.get("workflow"))
         return self
 
-    def _generate_action_input_output(self, inputs_outputs) -> list[DataRequirement]:
-        temp = []
-        for r in inputs_outputs:
-            if r.get("resource_type") == "ImagingStudy":
-                temp.append(DataRequirement(data_requirement_type=Code("ImagingStudy")))
-            elif r.get("resource_type") == "Observation":
-                temp.append(DataRequirement(data_requirement_type=Code("Observation"),
-                                            code_filter=[DataRequirementCodeFilter(code=[
-                                                Coding(code=Code(value=r.get("code")), system=r.get("system"),
-                                                       display=r.get("display"))])]))
-
-        return temp
-
-    async def _generate_actions(self, actions):
-        temp = []
-        for a in actions:
-            if a is not None:
-                tool = await self.get_resource("ActivityDefinition", a.get("related_tool_uuid"))
-                temp.append(PlanDefinitionAction(
-                    title=a.get("title"),
-                    description=a.get("description"),
-                    definition=PlanDefinitionActionDefinition(
-                        definition_canonical=tool.to_reference().reference) if tool is not None else None,
-                    input=self._generate_action_input_output(a.get("input")),
-                    output=self._generate_action_input_output(a.get("output")),
-                ))
-        return temp
-
     async def generate_resources(self):
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
                                 value=self.descriptions["uuid"])
@@ -95,3 +67,36 @@ class Workflow(AbstractDigitalTWINBase, ABC):
         self.descriptions["resource"] = resource
         self.descriptions["reference"] = Reference(reference=resource.to_reference().reference, display="Workflow")
         return self
+
+    @staticmethod
+    def _generate_action_input_output(inputs_outputs) -> list[DataRequirement]:
+        temp = []
+        for r in inputs_outputs:
+            if r.get("resource_type") == "ImagingStudy":
+                temp.append(DataRequirement(data_requirement_type=Code("ImagingStudy"),
+                                            code_filter=[DataRequirementCodeFilter(code=[
+                                                Coding(code=Code(value=r.get("code", None)), system=r.get("system", None),
+                                                       display=r.get("display", None))])]
+                                            ))
+            elif r.get("resource_type") == "Observation":
+                temp.append(DataRequirement(data_requirement_type=Code("Observation"),
+                                            code_filter=[DataRequirementCodeFilter(code=[
+                                                Coding(code=Code(value=r.get("code", None)), system=r.get("system", None),
+                                                       display=r.get("display", None))])]))
+
+        return temp
+
+    async def _generate_actions(self, actions):
+        temp = []
+        for a in actions:
+            if a is not None:
+                tool = await self.get_resource("ActivityDefinition", a.get("related_tool_uuid"))
+                temp.append(PlanDefinitionAction(
+                    title=a.get("title"),
+                    description=a.get("description"),
+                    definition=PlanDefinitionActionDefinition(
+                        definition_canonical=tool.to_reference().reference) if tool is not None else None,
+                    input=self._generate_action_input_output(a.get("input")),
+                    output=self._generate_action_input_output(a.get("output")),
+                ))
+        return temp

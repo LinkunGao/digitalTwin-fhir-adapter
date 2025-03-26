@@ -1,12 +1,63 @@
+import asyncio
+from digitaltwins_on_fhir.core import Adapter, transform_value
+from digitaltwins_on_fhir.core.resource import Patient, CodeableConcept, Coding, Reference, Identifier, Code, \
+    HumanName, Practitioner, ImagingStudy, DiagnosticReport
+import datetime
+from fhir_cda.ehr import Measurement
+from pathlib import Path
+from utils import tools
+from pprint import pprint
+import json
+from typing import Literal
 
+class Test:
+    adapter = Adapter("http://localhost:8080/fhir/")
 
+    async def test_measurements_load_json_description(self, root):
+        # dataset/ep4/measurements/
+        root = Path(root)
+        measurements = self.adapter.digital_twin().measurements()
+        with open(root / 'measurements.json', 'r') as file:
+            data = json.load(file)
+
+        # await measurements.add_practitioner(researcher=Practitioner(
+        #     active=True,
+        #     identifier=[
+        #         Identifier(use=Code("official"), system="sparc.org",
+        #                    value='sparc-d557ac68-f365-0718-c945-8722ec')],
+        #     name=[HumanName(use="usual", text="Xiaoming Li", family="Li", given=["Xiaoming"])],
+        #     gender="male"
+        # ))
+
+        await measurements.add_measurements_description(data).generate_resources()
+
+    async def test_workflow_tool_load_json_description(self, root):
+        root = Path(root)
+        subfolders = [entry for entry in root.iterdir() if entry.is_dir()]
+        workflow_tool = self.adapter.digital_twin().workflow_tool()
+
+        for folder in subfolders:
+            with open(folder / 'workflow_tool.json', 'r') as file:
+                data = json.load(file)
+            await workflow_tool.add_workflow_tool_description(data).generate_resources()
+        pprint(workflow_tool.descriptions)
+
+    async def test_workflow_load_json_description(self, root):
+        root = Path(root)
+        subfolders = [entry for entry in root.iterdir() if entry.is_dir()]
+        workflow = self.adapter.digital_twin().workflow()
+
+        for folder in subfolders:
+            with open(folder / 'workflow_fhir.json', 'r') as file:
+                data = json.load(file)
+            await workflow.add_workflow_description(data).generate_resources()
+
+        pprint(workflow.descriptions)
 
 
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    # loop.run_until_complete(test.setup_digitaltwins("ep1"))
-    loop.run_until_complete(test.test_generate_report(patient_uuid="54f2abff-6594-11ef-917d-484d7e9beb16",
-                                                      workflow_uuid="e3b3eaa0-65ae-11ef-917d-484d7e9beb16",
-                                                      workflow_tool_uuid="b6b7b363-65ae-11ef-917d-484d7e9beb16",
-                                                      dataset_uuid="93d49efa-5f4e-11ef-917d-484d7e9beb16"))
+    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements"))
+    # loop.run_until_complete(test.test_workflow_tool_load_json_description("./dataset/ep4/tools"))
+    loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep4/workflow"))

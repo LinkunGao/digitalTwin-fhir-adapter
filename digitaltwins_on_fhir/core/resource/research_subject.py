@@ -8,7 +8,7 @@ class ResearchSubject(AbstractResource, ABC):
     def __init__(self, status: Literal[
         "candidate", "eligible", "follow-up", "ineligible", "not-registered", "off-study", "on-study",
         "on-study-intervention", "on-study-observation", "pending-on-study", "potential-candidate", "screening",
-        "withdrawn"], study: Reference, individual: Reference, meta: Optional[Meta] = None,
+        "withdrawn"], individual: Reference, study: Optional[Reference] = None, meta: Optional[Meta] = None,
                  identifier: Optional[List[Identifier]] = None, period: Optional[Period] = None,
                  assigned_arm: Optional[str] = None, actual_arm: Optional[str] = None,
                  consent: Optional[Reference] = None):
