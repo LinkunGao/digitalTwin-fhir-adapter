@@ -307,7 +307,12 @@ class Quantity:
     def __init__(self, value: Optional[Union[float, int]] = None,
                  comparator: Optional[Literal["<", "<=", ">=", ">"]] = None,
                  unit: Optional[str] = None, system: Optional[str] = None, code: Optional[Code] = None):
-        self.value = float(value) if isinstance(value, int) else value
+        try:
+            value = float(value)
+        except ValueError:
+            print("Quantity value is not a number!")
+
+        self.value = value
         self.comparator = comparator
         self.unit = unit
         self.system = system

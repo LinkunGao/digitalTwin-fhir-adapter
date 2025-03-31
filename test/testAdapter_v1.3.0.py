@@ -58,6 +58,6 @@ class Test:
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements"))
+    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements/dataset-1"))
     # loop.run_until_complete(test.test_workflow_tool_load_json_description("./dataset/ep4/tools"))
-    loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep4/workflow"))
+    # loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep4/workflow"))

@@ -39,18 +39,18 @@ class Measurements(AbstractDigitalTWINBase, ABC):
 
     def _generate_measurements_via_cda_descriptions(self):
         self.primary_measurements["patients"] = []
-        for patient in self.cda_descriptions.get("patients"):
+        for cda_patient in self.cda_descriptions.get("patients"):
             data = {
-                "uuid": patient.get("uuid"),
-                "name": patient.get("name"),
+                "uuid": cda_patient.get("uuid"),
+                "name": cda_patient.get("name"),
                 "resource": None,
                 "reference": "",
                 "research_subject": {
-                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{patient.get('uuid')}_ResearchSubject",
+                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_ResearchSubject",
                     "resource": None,
                     "reference": "",
                     "consent": {
-                        "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{patient.get('uuid')}_ResearchSubject_Consent",
+                        "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_ResearchSubject_Consent",
                         "resource": None,
                         "reference": "",
                     }
@@ -62,12 +62,13 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                     "reference": "",
                     "observations": [],
                     "imagingStudy": {
-                        "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy",
+                        "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy",
                         "resource": None,
                         "reference": "",
+                        "description": cda_patient.get("imagingStudy").get("description", None),
                         "endpoint": {
-                            "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Endpoint",
-                            "url": patient.get("imagingStudy").get("endpointUrl"),
+                            "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Endpoint",
+                            "url": cda_patient.get("imagingStudy").get("endpointUrl"),
                             "resource": None,
                             "reference": "",
                         },
@@ -75,7 +76,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                             {
                                 "uid": s.get("uid"),
                                 "endpoint": {
-                                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Series_Endpoint_{s.get('uid')}",
+                                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Series_Endpoint_{s.get('uid')}",
                                     "url": s.get("endpointUrl"),
                                     "resource": None,
                                     "reference": "",
@@ -83,15 +84,15 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                                 "numberOfInstances": s.get("numberOfInstances"),
                                 "bodySite": s.get("bodySite"),
                                 "instances": s.get("instances"),
-                            } for s in patient.get("imagingStudy").get("series")
+                            } for s in cda_patient.get("imagingStudy").get("series")
                         ]
-                    }
+                    } if cda_patient.get("imagingStudy") != {} else {}
                 }
             }
 
-            for i, ob in enumerate(patient.get("observations")):
+            for i, ob in enumerate(cda_patient.get("observations")):
                 obc = {
-                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{patient.get('uuid')}_Primary_Measurements_Composition_Observation_{i}",
+                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_Observation_{i}",
                     "resource": None,
                     "reference": "",
                 }
@@ -149,7 +150,10 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                                            "text"] if "name" in resource else "")
             await self._generate_consent(p)
             await self._generate_research_subject(p)
-            await self._generate_imaging_study(p)
+
+
+            if p.get("composition").get("imagingStudy") != {}:
+                await self._generate_imaging_study(p)
 
             for ob in p["composition"]["observations"]:
                 await self._generate_primary_observation(p, ob)
@@ -188,7 +192,6 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         value_key = list(value_keys)[0]
         ob_value = ObservationValue()
         ob_value.set(key=value_key, value=observation.get("value").get(value_key))
-
         ob = Observation(identifier=[identifier],
                          status="final",
                          code=CodeableConcept(
@@ -265,6 +268,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                                      status="available",
                                      started=transform_value(datetime.now(timezone.utc)),
                                      subject=patient.get("reference"),
+                                     description=patient.get("composition").get("imagingStudy").get("description", None),
                                      endpoint=[endpoint.get("reference")],
                                      number_of_series=number_of_series,
                                      number_of_instances=number_of_instances,
