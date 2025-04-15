@@ -8,3 +8,15 @@ SNOMEDCT = {
     }
 }
 
+LOINC = {
+    "model/obj": {
+        "coding": [
+            {
+                "system": "http://loinc.org",
+                "code": "18748-4",
+                "display": "Diagnostic Imaging Report"
+            }
+        ],
+        "text": "3D Surgical Planning Model (OBJ)"
+    }
+}

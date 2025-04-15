@@ -60,6 +60,11 @@ class CodeableConcept:
 
         return {k: v for k, v in codeableconcept.items() if v not in ("", None, [])}
 
+    def set(self, codings: List = None, text: str = ""):
+        self.codings = [Coding(system=c.get("system"), code=Code(value=c.get("code")), display=c.get("display", "")) for
+                        c in codings] if codings is not None else None
+        self.text = text
+
     def convert(self, fhirpy_codeable):
         if fhirpy_codeable is None:
             return None
@@ -588,6 +593,7 @@ class Ratio:
         self.numerator = Quantity().convert(fhir_ratio.get("numerator"))
         self.denominator = Quantity().convert(fhir_ratio.get("denominator"))
         return self
+
 
 class SampledData:
 

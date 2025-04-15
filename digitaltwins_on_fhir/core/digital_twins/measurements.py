@@ -8,9 +8,10 @@ from digitaltwins_on_fhir.core.resource import (
     Code, Coding, CodeableConcept, ResearchStudy, Identifier,
     Practitioner, Patient, Reference, Endpoint, ImagingStudy, ImagingStudySeries, ImagingStudyInstance, HumanName,
     ResearchSubject, Consent, ConsentScopeCodeableConcept, ConsentCategoryCodeableConcept, Observation,
-    ObservationValue, Composition, CompositionAttester, CompositionSection
+    ObservationValue, Composition, CompositionAttester, CompositionSection, DocumentReference, Attachment,
+    DocumentReferenceContent
 )
-from .knowledgebase import DIGITALTWIN_ON_FHIR_SYSTEM
+from .knowledgebase import DIGITALTWIN_ON_FHIR_SYSTEM, LOINC
 from typing import Dict, Any, List
 
 
@@ -42,7 +43,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         for cda_patient in self.cda_descriptions.get("patients"):
             data = {
                 "uuid": cda_patient.get("uuid"),
-                "name": cda_patient.get("name"),
+                "name": cda_patient.get("name", ""),
                 "resource": None,
                 "reference": "",
                 "research_subject": {
@@ -61,43 +62,63 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                     "resource": None,
                     "reference": "",
                     "observations": [],
-                    "imagingStudy": {
-                        "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy",
-                        "resource": None,
-                        "reference": "",
-                        "description": cda_patient.get("imagingStudy").get("description", None),
-                        "endpoint": {
-                            "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Endpoint",
-                            "url": cda_patient.get("imagingStudy").get("endpointUrl"),
-                            "resource": None,
-                            "reference": "",
-                        },
-                        "series": [
-                            {
-                                "uid": s.get("uid"),
-                                "endpoint": {
-                                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Series_Endpoint_{s.get('uid')}",
-                                    "url": s.get("endpointUrl"),
-                                    "resource": None,
-                                    "reference": "",
-                                },
-                                "numberOfInstances": s.get("numberOfInstances"),
-                                "bodySite": s.get("bodySite"),
-                                "instances": s.get("instances"),
-                            } for s in cda_patient.get("imagingStudy").get("series")
-                        ]
-                    } if cda_patient.get("imagingStudy") != {} else {}
+                    "imagingStudy": [],
+                    "documentReference": [],
                 }
             }
 
             for i, ob in enumerate(cda_patient.get("observations")):
                 obc = {
-                    "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_Observation_{i}",
+                    "uuid": ob.get(
+                        "uuid") or f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_Observation_{i}",
                     "resource": None,
                     "reference": "",
                 }
                 obc.update(ob)
                 data["composition"]["observations"].append(obc)
+
+            for i, imaging in enumerate(cda_patient.get("imagingStudy")):
+                image = {
+                    "uuid": imaging.get(
+                        "uuid") or f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_{i}",
+                    "resource": None,
+                    "reference": "",
+                    "description": imaging.get("description", None),
+                    "endpoint": {
+                        "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Endpoint_{i}",
+                        "url": imaging.get("endpointUrl"),
+                        "resource": None,
+                        "reference": "",
+                    },
+                    "series": [
+                        {
+                            "uid": s.get("uid"),
+                            "endpoint": {
+                                "uuid": f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_ImagingStudy_Series_Endpoint_{s.get('uid')}",
+                                "url": s.get("endpointUrl"),
+                                "resource": None,
+                                "reference": "",
+                            },
+                            "description": s.get("description", ""),
+                            "numberOfInstances": s.get("numberOfInstances"),
+                            "bodySite": s.get("bodySite"),
+                            "instances": s.get("instances"),
+                        } for s in imaging.get("series")
+                    ]
+                }
+                data["composition"]["imagingStudy"].append(image)
+
+            for i, doc in enumerate(cda_patient.get("documentReference", [])):
+                doc_reference = {
+                    "uuid": doc.get(
+                        "uuid") or f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_DocumentReference_{i}",
+                    "contentType": doc.get("contentType"),
+                    "url": doc.get("url"),
+                    "title": doc.get("title", None),
+                    "resource": None,
+                    "reference": "",
+                }
+                data["composition"]["documentReference"].append(doc_reference)
 
             self.primary_measurements["patients"].append(data)
 
@@ -107,15 +128,6 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         resource = await self.operator.create(researcher).save()
         if resource is None:
             return
-        self.primary_measurements["practitioner"] = {
-            "uuid": resource["identifier"][0]["value"],
-            "resource": resource,
-            "reference": Reference(reference=resource.to_reference().reference,
-                                   display=resource["name"][0][
-                                       "text"] if "name" in resource else "")
-        }
-        self._practitioner = resource,
-        self._practitioner_ref = self.primary_measurements["practitioner"]["reference"]
         return self
 
     async def generate_resources(self):
@@ -151,13 +163,14 @@ class Measurements(AbstractDigitalTWINBase, ABC):
             await self._generate_consent(p)
             await self._generate_research_subject(p)
 
-
-            if p.get("composition").get("imagingStudy") != {}:
-                await self._generate_imaging_study(p)
+            for image in p["composition"]["imagingStudy"]:
+                await self._generate_imaging_study(p, image)
 
             for ob in p["composition"]["observations"]:
                 await self._generate_primary_observation(p, ob)
 
+            for doc in p["composition"]["documentReference"]:
+                await self._generate_document_reference(p, doc)
             await self._generate_primary_composition(p)
 
     async def _generate_consent(self, patient):
@@ -207,32 +220,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
         observation["resource"] = resource
         observation["reference"] = Reference(reference=resource.to_reference().reference)
 
-    async def _generate_primary_composition(self, patient):
-        composition = patient.get("composition")
-        identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM, value=composition.get("uuid"))
-        entry = [ob.get("reference") for ob in composition.get("observations")]
-        entry.append(composition.get("imagingStudy").get("reference"))
-        c = Composition(
-            identifier=[identifier],
-            status="final",
-            title=composition.get("title"),
-            composition_type=CodeableConcept(codings=[
-                Coding(system=DIGITALTWIN_ON_FHIR_SYSTEM, code=Code(value="primary measurements"),
-                       display="primary measurements")], text="primary measurements"),
-            subject=patient.get("research_subject").get("reference"),
-            date=transform_value(datetime.now(timezone.utc)),
-            author=[patient.get("reference")],
-            section=[CompositionSection(
-                title="primary measurements",
-                entry=entry,
-            )]
-        )
-
-        resource = await self.operator.create(c).save()
-        composition["resource"] = resource
-        composition["reference"] = Reference(reference=resource.to_reference().reference)
-
-    async def _generate_imaging_study(self, patient):
+    async def _generate_imaging_study(self, patient, image):
         """
             (0020, 000d) Study Instance UID
             (0020, 000e) Series Instance UID
@@ -246,7 +234,6 @@ class Measurements(AbstractDigitalTWINBase, ABC):
             (0018, 0010) Contrast/Bolus Agent                LO: 'Magnevist'
             (0018, 0015) Body Part Examined                  CS: 'BREAST'
         """
-        image = patient.get("composition").get("imagingStudy")
         endpoint = image.get("endpoint")
         endpoint_imagingstudy = self._generate_endpoint(identifier_value=endpoint.get("uuid"),
                                                         url=endpoint.get("url"))
@@ -268,7 +255,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                                      status="available",
                                      started=transform_value(datetime.now(timezone.utc)),
                                      subject=patient.get("reference"),
-                                     description=patient.get("composition").get("imagingStudy").get("description", None),
+                                     description=image.get("description", None),
                                      endpoint=[endpoint.get("reference")],
                                      number_of_series=number_of_series,
                                      number_of_instances=number_of_instances,
@@ -307,6 +294,7 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                     code=Code("MR"),
                     display="MRI"
                 ),
+                description=s.get("description", ""),
                 number_of_instances=number_of_series_instances,
                 endpoint=[endpoint.get("reference")],
                 body_site=Coding(code=Code(body_site["code"]), display=body_site["display"],
@@ -350,3 +338,53 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                             Coding(code=Code("DICOM WADO-RS"),
                                    system="http://hl7.org/fhir/endpoint-payload-type",
                                    display="DICOM WADO-RS")])])
+
+    async def _generate_document_reference(self, patient, doc):
+        identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM, value=doc.get("uuid"))
+        _type = LOINC.get(doc.get("contentType"), None)
+        document_reference = DocumentReference(
+            identifier=[identifier],
+            status="current",
+            doc_status="final",
+            document_reference_type=CodeableConcept().set(_type.get("coding"),
+                                                          _type.get("text")) if _type is not None else None,
+            category=[CodeableConcept().set(codings=[
+                {
+                    "system": "http://hl7.org/fhir/document-classification",
+                    "code": "IMAGING",
+                    "display": "Imaging"
+                }
+            ])],
+            subject=patient.get("reference"),
+            content=[DocumentReferenceContent(
+                Attachment(content_type=doc.get("contentType"), url=doc.get("url"), title=doc.get("title")))]
+        )
+        resource = await self.operator.create(document_reference).save()
+        doc["resource"] = resource
+        doc["reference"] = Reference(reference=resource.to_reference().reference)
+
+    async def _generate_primary_composition(self, patient):
+        composition = patient.get("composition")
+        identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM, value=composition.get("uuid"))
+        entry = [ob.get("reference") for ob in composition.get("observations")]
+        entry.extend([image.get("reference") for image in composition.get("imagingStudy")])
+        entry.extend([doc.get("reference") for doc in composition.get("documentReference")])
+        c = Composition(
+            identifier=[identifier],
+            status="final",
+            title=composition.get("title"),
+            composition_type=CodeableConcept(codings=[
+                Coding(system=DIGITALTWIN_ON_FHIR_SYSTEM, code=Code(value="primary measurements"),
+                       display="primary measurements")], text="primary measurements"),
+            subject=patient.get("research_subject").get("reference"),
+            date=transform_value(datetime.now(timezone.utc)),
+            author=[patient.get("reference")],
+            section=[CompositionSection(
+                title="primary measurements",
+                entry=entry,
+            )]
+        )
+
+        resource = await self.operator.create(c).save()
+        composition["resource"] = resource
+        composition["reference"] = Reference(reference=resource.to_reference().reference)
