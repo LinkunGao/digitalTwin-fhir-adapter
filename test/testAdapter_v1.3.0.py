@@ -11,7 +11,8 @@ import json
 from typing import Literal
 
 class Test:
-    adapter = Adapter("http://localhost:8080/fhir/")
+    # adapter = Adapter("http://localhost:8080/fhir/")
+    adapter = Adapter("http://130.216.217.173:8080/fhir")
 
     async def test_measurements_load_json_description(self, root):
         # dataset/ep4/measurements/
