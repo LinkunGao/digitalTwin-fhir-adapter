@@ -35,3 +35,5 @@ from .definition import (DefinitionParticipant, DefinitionTiming, DynamicValue)
 from .activity_definition import ActivityDefinition, ActivityDefinitionProduct
 from .task import Task, TaskRestriction, TaskInputOutput
 from .diagnostic_report import (DiagnosticReport, DiagnosticReportMedia, DiagnosticEffective)
+from .document_reference import (DocumentReference, DocumentReferenceContent, DocumentReferenceRelatesTo,
+                                 DocumentReferenceContext)

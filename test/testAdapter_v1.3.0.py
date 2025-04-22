@@ -11,7 +11,8 @@ import json
 from typing import Literal
 
 class Test:
-    adapter = Adapter("http://localhost:8080/fhir/")
+    # adapter = Adapter("http://localhost:8080/fhir/")
+    adapter = Adapter("http://130.216.217.173:8080/fhir")
 
     async def test_measurements_load_json_description(self, root):
         # dataset/ep4/measurements/
@@ -20,14 +21,14 @@ class Test:
         with open(root / 'measurements.json', 'r') as file:
             data = json.load(file)
 
-        # await measurements.add_practitioner(researcher=Practitioner(
-        #     active=True,
-        #     identifier=[
-        #         Identifier(use=Code("official"), system="sparc.org",
-        #                    value='sparc-d557ac68-f365-0718-c945-8722ec')],
-        #     name=[HumanName(use="usual", text="Xiaoming Li", family="Li", given=["Xiaoming"])],
-        #     gender="male"
-        # ))
+        await measurements.add_practitioner(researcher=Practitioner(
+            active=True,
+            identifier=[
+                Identifier(use=Code("official"), system="sparc.org",
+                           value='sparc-d557ac68-f365-0718-c945-8722ec')],
+            name=[HumanName(use="usual", text="Prasad", family="", given=["Prasad"])],
+            gender="male"
+        ))
 
         await measurements.add_measurements_description(data).generate_resources()
 
@@ -54,10 +55,26 @@ class Test:
 
         pprint(workflow.descriptions)
 
+    async def test_workflow_process_load_json_description(self, root):
+        root = Path(root)
+        processes = self.adapter.digital_twin().process()
+
+        with open(root / 'workflow_tool_process.json', 'r') as file:
+            data = json.load(file)
+        await processes.add_workflow_tool_process_description(data).generate_resources()
+
+
+
+
+
 
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements"))
+    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements/dataset-1"))
+    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements/dataset-2"))
     # loop.run_until_complete(test.test_workflow_tool_load_json_description("./dataset/ep4/tools"))
-    loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep4/workflow"))
+    # loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep4/workflow"))
+    # loop.run_until_complete(test.test_workflow_process_load_json_description("./dataset/ep4/process/dataset-workflow-tool-process-1"))
+    loop.run_until_complete(
+        test.test_workflow_process_load_json_description("./dataset/ep4/process/dataset-workflow-tool-process-2"))

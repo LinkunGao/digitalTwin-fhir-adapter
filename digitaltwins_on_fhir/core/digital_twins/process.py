@@ -4,16 +4,20 @@ from datetime import datetime, timezone
 from digitaltwins_on_fhir.core.utils import transform_value
 from digitaltwins_on_fhir.core.resource import (Identifier, ObservationValue, Observation, CodeableConcept,
                                                 Code, Coding, Reference, Task, TaskInputOutput, Composition,
-                                                CompositionSection, DiagnosticReport)
+                                                CompositionSection, DiagnosticReport, ResearchStudy, ResearchSubject,
+                                                Consent, Group, GroupMember, ConsentScopeCodeableConcept,
+                                                ConsentCategoryCodeableConcept)
 from .knowledgebase import DIGITALTWIN_ON_FHIR_SYSTEM
 from typing import Dict, Any, List
+from .measurements import Measurements
+from pprint import pprint
 
 
 class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
     def __init__(self, core, operator):
         self.descriptions: Dict[str, Any] = {}
         self.cda_descriptions = None
-
+        self.measurements: Measurements = Measurements(core, operator)
         super().__init__(core, operator)
 
     async def generate_diagnostic_report(self, report: DiagnosticReport):
@@ -34,149 +38,208 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
         return self._generate_workflow_tool_process_via_cda_descriptions()
 
     def _generate_workflow_tool_process_via_cda_descriptions(self):
+        """
+            One assay only have one cohort
+        :return:
+        """
         process = self.cda_descriptions.get("process")
         self.descriptions = {
+            "study": {
+                "uuid": process.get("study").get("uuid"),
+                "name": process.get("study").get("name"),
+                "reference": None,
+            },
+            "researcher": {
+                "uuid": process.get("researcher").get("uuid"),
+                "reference": None,
+            },
+            "assay": {
+                "uuid": process.get("assay").get("uuid"),
+                "name": process.get("assay").get("name"),
+                "reference": None,
+            },
+            "patients": [{"uuid": p.get("uuid"), "reference": None} for p in process.get("cohort")],
             "workflow": {
                 "uuid": process.get("workflow"),
                 "reference": None,
             },
-            "workflow_tool": {
-                "uuid": process.get("workflow_tool"),
-                "reference": None,
-            },
-            "research_study": {
-                "uuid": process.get("dataset"),
-                "reference": None,
+            "measurements": {
+                "dataset": {
+                    "uuid": process.get("dataset").get("uuid"),
+                    "name": process.get("dataset").get("name"),
+                },
+                "patients": [
+                    {
+                        "uuid": p.get("uuid"),
+                        "observations": patient_outputs["observations"],
+                        "imagingStudy": patient_outputs["imagingStudy"],
+                        "documentReference": patient_outputs["documentReference"],
+                    } for p in process.get("cohort") if
+                    (patient_outputs := self._get_patient_outputs(p.get("processes"))) is not None
+                ]
             },
             "processes": []
         }
 
-        for p in process.get("patients"):
-            process = {
-                "uuid": p.get("process_uuid"),
-                "patient": {
-                    "uuid": p.get("patient_uuid"),
-                    "reference": None,
-                },
-                "research_subject": {
-                    "reference": None,
-                },
-                "date": p.get("date"),
-                "input": p.get("input"),
-                "output": p.get("output"),
-                "composition": {
-                    "uuid": f"{p.get('patient_uuid')}-{p.get('process_uuid')}-composition",
+        for patient in process.get("cohort"):
+            for tool_process in patient.get("processes"):
+                temp = {
+                    "uuid": tool_process.get("uuid"),
+                    "tool_uuid": tool_process.get("tool_uuid"),
+                    "patient_uuid": patient.get("uuid"),
+                    "date": tool_process.get("date"),
+                    "input": tool_process.get("input"),
+                    "output": tool_process.get("output"),
+                    "output_dataset_uuid": process.get("dataset").get("uuid")
                 }
-            }
-            self.descriptions["processes"].append(process)
+                self.descriptions["processes"].append(temp)
         return self
+
+    @staticmethod
+    def _get_patient_outputs(processes):
+        res = {
+            "observations": [],
+            "imagingStudy": [],
+            "documentReference": []
+        }
+        for i, process in enumerate(processes):
+            if process.get("output"):
+                for j, o in enumerate(process.get("output", [])):
+                    if o.get("resource_type") == "ImagingStudy":
+                        o.update({
+                            "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-ImagingStudy-{i}-{j}"
+                        })
+                        res["imagingStudy"].append(o)
+                    elif o.get("resource_type") == "Observation":
+                        o.update({
+                            "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-Observation-{i}-{j}"
+                        })
+                        res["observations"].append(o)
+                    elif o.get("resource_type") == "DocumentReference":
+                        o.update({
+                            "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-DocumentReference-{i}-{j}"
+                        })
+                        res["documentReference"].append(o)
+        return res
 
     async def generate_resources(self):
-        await self._generate_related_references()
+        # 1. Create Study resource
+        await self._generate_study_resource()
+        # 2. Create Assay resource
+        await self._generate_assay_resource()
+        # 3. Generate Cohort resource
+        await self._generate_cohort_resource()
+        # 4. Generate Output measurements
+        await self._generate_measurement()
+        # 5. Generate processes
         for p in self.descriptions["processes"]:
-            await self._generate_task_outputs(p)
             await self._generate_task(p)
-            await self._generate_composition(p)
         return self
 
-    async def _generate_related_references(self):
-        research_study_resource = await self.get_resource("ResearchStudy", self.descriptions["research_study"]["uuid"])
-        workflow_resource = await self.get_resource("PlanDefinition", self.descriptions["workflow"]["uuid"])
-        workflow_tool_resource = await self.get_resource("ActivityDefinition",
-                                                         self.descriptions["workflow_tool"]["uuid"])
-        self.descriptions["workflow"]["reference"] = Reference(
-            reference=workflow_resource.to_reference().reference, display=workflow_resource.get("name"))
-        self.descriptions["workflow_tool"]["reference"] = Reference(
-            reference=workflow_tool_resource.to_reference().reference, display=workflow_tool_resource.get("name"))
-        self.descriptions["research_study"]["reference"] = Reference(
-            reference=research_study_resource.to_reference().reference, display=research_study_resource.get("title"))
-        for p in self.descriptions.get("processes"):
-            patient_resource = await self.get_resource("Patient", p["patient"]["uuid"])
-            p["patient"]["reference"] = Reference(patient_resource.to_reference().reference, display="Patient")
+    async def _generate_study_resource(self):
+        researcher_description = self.descriptions.get("researcher")
+        researcher = await self.get_resource("Practitioner", researcher_description.get("uuid"))
+        researcher_description["reference"] = researcher.to_reference()
 
-            research_subject_resource = await self.client.resources("ResearchSubject").search(
-                patient=patient_resource.to_reference().reference,
-                study=research_study_resource.to_reference().reference).first()
-            p["research_subject"]["reference"] = Reference(research_subject_resource.to_reference().reference,
-                                                           display="ResearchSubject")
+        identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
+                                value=self.descriptions["study"]["uuid"])
+        study = ResearchStudy(
+            identifier=[identifier],
+            status="completed",
+            title=self.descriptions["study"]["name"],
+            principal_investigator=Reference(reference=researcher.to_reference().reference,
+                                             display=researcher["name"][0]["text"])
+        )
+        resource = await self.operator.create(study).save()
+        self.descriptions.get("study")["reference"] = resource.to_reference()
 
-    async def _generate_task_outputs(self, process):
-        outputs = process.get("output")
-        if len(outputs) == 0:
-            return
-        for idx, output in enumerate(outputs):
-            if output.get("resource_type") != "Observation":
-                print("The output value only supports Observation at this stage")
-                continue
-            identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
-                                    value=f"{self.descriptions.get('workflow_tool').get('uuid')}-{process.get('uuid')}-{output.get('resource_type')}-{idx}")
-            value_keys = output.get("value").keys()
-            value_key = list(value_keys)[0]
-            ob_value = ObservationValue()
-            ob_value.set(key=value_key, value=output.get("value").get(value_key))
+    async def _generate_assay_resource(self):
+        """
+        study ResearchStudy resource should be store in assay Resource's partOf attribute
+        workflow PlanDefinition resource should be store in assay Resource's protocol attribute
+        :return:
+        """
+        workflow_description = self.descriptions.get("workflow")
+        workflow_resource = await self.get_resource("PlanDefinition", workflow_description.get("uuid"))
+        workflow_description["reference"] = workflow_resource.to_reference()
 
-            ob = Observation(identifier=[identifier],
-                             status="final",
-                             code=CodeableConcept(
-                                 codings=[
-                                     Coding(
-                                         system=output.get("codeSystem"),
-                                         code=Code(value=output.get("code")),
-                                         display=output.get("display"))],
-                                 text=output.get("display")),
-                             value=ob_value,
-                             subject=process.get("patient").get("reference"),
-                             focus=[self.descriptions.get("workflow_tool").get("reference")]
-                             )
+        identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
+                                value=self.descriptions["assay"]["uuid"])
+        assay = ResearchStudy(
+            identifier=[identifier],
+            status="completed",
+            title=self.descriptions["assay"]["name"],
+            part_of=[Reference(reference=self.descriptions["study"]["reference"].reference)],
+            protocol=[Reference(reference=workflow_description["reference"].reference)],
+        )
+        assay_resource = await self.operator.create(assay).save()
+        self.descriptions.get("assay")["reference"] = assay_resource.to_reference()
 
-            resource = await self.operator.create(ob).save()
-            output.update({"reference": Reference(reference=resource.to_reference().reference,
-                                                  display=output.get("resource_type"))})
+    async def _generate_cohort_resource(self):
+        patients = self.descriptions.get("patients")
+        for patient in patients:
+            patient_resource = await self.get_resource("Patient", patient.get("uuid"))
+            patient["reference"] = patient_resource.to_reference()
+            consent_resource = await self.operator.create(Consent(status="active",
+                                                                  identifier=[
+                                                                      Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
+                                                                                 value=f"{self.descriptions.get('assay').get('uuid')}-{patient.get('uuid')}-subject-consent")],
+                                                                  scope=ConsentScopeCodeableConcept.get("research"),
+                                                                  category=[
+                                                                      ConsentCategoryCodeableConcept.get("research")],
+                                                                  patient=Reference(
+                                                                      reference=patient["reference"].reference,
+                                                                      display=patient_resource["name"][0]["text"])
+                                                                  )).save()
+
+            research_subject_resource = await self.operator.create(ResearchSubject(
+                identifier=[Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
+                                       value=f"{self.descriptions.get('assay').get('uuid')}-{patient.get('uuid')}-subject")],
+                status="on-study",
+                individual=Reference(reference=patient["reference"].reference,
+                                     display=patient_resource["name"][0]["text"]),
+                consent=Reference(reference=consent_resource.to_reference().reference),
+                study=Reference(reference=self.descriptions.get("assay").get("reference").reference),
+            )).save()
+            patient.update({
+                "subject_reference": research_subject_resource.to_reference(),
+            })
+
+            # Issue: group member can not store research subject, cannot save in FHIR server!
+
+    async def _generate_measurement(self):
+        await self.measurements.add_measurements_description(
+            descriptions=self.descriptions.get("measurements")).generate_resources()
 
     async def _generate_task(self, process):
         """
         FHIR Task Resource:
             owner: patient reference
-            for: workflow reference
+            for: Assay reference
             focus: workflow tool reference
             basedOn: research subject reference
             requester (Optional): practitioner reference
         """
+        tool_resource = await self.get_resource("ActivityDefinition", process.get("tool_uuid"))
+        patient = [p for p in self.descriptions.get("patients") if p.get("uuid") == process.get("patient_uuid")][0]
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
                                 value=process.get("uuid"))
         task_input = []
         task_output = []
         if len(process.get("input")) > 0:
             for i in process.get("input"):
-                resource = await self.get_resource(i.get("resource_type"), i.get("uuid"))
-                task_input.append(TaskInputOutput(
-                    CodeableConcept(
-                        codings=[
-                            Coding(system="http://hl7.org/fhir/resource-types",
-                                   code=Code(value=i.get("resource_type")),
-                                   display=i.get("resource_type"))],
-                        text=i.get("resource_type")),
-                    value=Reference(reference=resource.to_reference().reference, display=i.get("resource_type"))
-                ))
+                task_input.append(await self._generate_task_input_output(i))
         if len(process.get("output")) > 0:
             for o in process.get("output"):
-                task_output.append(TaskInputOutput(
-                    CodeableConcept(
-                        codings=[
-                            Coding(system="http://hl7.org/fhir/resource-types",
-                                   code=Code(value=o.get("resource_type")),
-                                   display=o.get("resource_type"))],
-                        text=o.get("resource_type")),
-                    value=o.get("reference")
-                ))
+                task_output.append(await self._generate_task_input_output(o))
         task = Task(identifier=[identifier], status="accepted", intent="unknown",
-                    description=f"Workflow process for {self.descriptions.get('workflow_tool').get('reference').get().get('display')}",
+                    description=f"Workflow process for {tool_resource.get('name', '')}",
                     authored_on=process.get("date"),
                     last_modified=process.get("date"),
-                    based_on=[process.get("research_subject").get("reference")],
-                    owner=process.get("patient").get("reference"),
-                    task_for=self.descriptions.get("workflow").get("reference"),
-                    focus=self.descriptions.get("workflow_tool").get("reference"),
+                    based_on=[Reference(reference=patient["subject_reference"].reference)],
+                    owner=Reference(reference=patient["reference"].reference),
+                    task_for=Reference(reference=self.descriptions.get("assay").get("reference").reference),
+                    focus=Reference(reference=tool_resource.to_reference().reference),
                     task_input=task_input,
                     task_output=task_output)
 
@@ -184,37 +247,14 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
         process.update(
             {"reference": Reference(reference=resource.to_reference().reference, display="Workflow Tool Process")})
 
-    async def _generate_composition(self, process):
-        """
-        Composition Resource:
-            author: Patient reference
-            subject: Task (workflow tool process) reference
-            section:
-                entry: Observations
-                focus: ActivityDefinition (workflow tool) reference
-
-        """
-        identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
-                                value=process.get("composition").get("uuid"))
-
-        entry = [ob.get("reference") for ob in process.get("output")]
-
-        c = Composition(
-            identifier=[identifier],
-            status="final",
-            composition_type=CodeableConcept(codings=[
-                Coding(system=DIGITALTWIN_ON_FHIR_SYSTEM, code=Code(value="workflow tool results"),
-                       display="workflow tool results")], text="workflow tool results"),
-            title="workflow tool results",
-            date=transform_value(datetime.now(timezone.utc)),
-            subject=process.get("reference"),
-            author=[process.get("patient").get("reference")],
-            section=[CompositionSection(
-                title="workflow tool results",
-                focus=self.descriptions.get("workflow_tool").get("reference"),
-                entry=entry,
-            )]
+    async def _generate_task_input_output(self, item):
+        resource = await self.get_resource(item.get("resource_type"), item.get("uuid"))
+        return TaskInputOutput(
+            CodeableConcept(
+                codings=[
+                    Coding(system="http://hl7.org/fhir/resource-types",
+                           code=Code(value=item.get("resource_type")),
+                           display=item.get("resource_type"))],
+                text=item.get("resource_type")),
+            value=Reference(reference=resource.to_reference().reference, display=item.get("resource_type"))
         )
-        resource = await self.operator.create(c).save()
-        process["composition"]["reference"] = Reference(reference=resource.to_reference().reference,
-                                                        display="Workflow Tool Result Composition")
