@@ -46,20 +46,23 @@ await measurements.add_practitioner(researcher=Practitioner(
 ### Search
 #### References in Task (workflow tool process) resource
 - owner: `Patient` reference
-- for: `PlanDefinition` (workflow) reference
+- for: `ResearchStudy` (Assay) reference
 - focus: `ActivityDefinition` (workflow tool) reference
-- basedOn: `ResearchSubject` reference
+- basedOn: `ResearchSubject` (patient research subject) reference
 - requester (Optional): `Practitioner` (researcher) reference
 - references in input
   - ImagingStudy
   - Observation
+  - DocumentReference
 - references in output
+  - ImagingStudy
   - Observation
+  - DocumentReference
 
 ###### Example
 
 - Find a specific workflow process
-  - If known: patient, dataset, workflow tool and workflow uuids
+  - If known: patient, assay, and workflow tool uuids
 
 ```python
 client = adapter.async_client
@@ -67,21 +70,18 @@ client = adapter.async_client
 # Step 1: find the patient
 patient = await client.resources("Patient").search(
                                     identifier="patient-xxxx").first()
-# Step 2: find the dataset
-dataset = await client.resources("ResearchStudy").search(
+# Step 2: find the assay
+assay = await client.resources("ResearchStudy").search(
                                     identifier="dataset-xxxx").first()
 # Step 3: find the workflow tool
 workflow_tool = await client.resources("ActivityDefinition").search(
                                     identifier="workflow-tool-xxxx").first()
-# Step 4: find the research subject
+# Step 4: find the research subject (cohort in assay)
 research_subject = await client.resources("ResearchSubject").search(
                                     patient=patient.to_reference().reference,
-                                    study=dataset.to_reference().reference).first()
-# Step 5: find workflow
-workflow = await client.resources("PlanDefinition").search(
-                                    identifier="sparc-workflow-uuid-001").first()
+                                    study=assay.to_reference().reference).first()
 workflow_tool_process = await client.resources("Task").search(
-                                    subject=workflow.to_reference(),
+                                    subject=assay.to_reference(),
                                     focus=workflow_tool.to_reference(),
                                     based_on=research_subject.to_reference(),
                                     owner=patient.to_reference()).first()
@@ -99,7 +99,12 @@ for i in inputs:
 composition = await client.resources("Composition").search(
                                     title="primary measurements", 
                                     entry=input_reference).first()
-dataset = await composition.get("subject").to_resource()
+dataset_uuid = composition.get_by_path([
+        'identifier',
+        {'system':'https://www.auckland.ac.nz/en/abi.html'},
+        'value'
+    ], '')
+dataset = await client.resources("Composition").search(identifier=dataset_uuid).fetch_all()
 ```
 
 - Find all output resources of the workflow tool process
@@ -130,50 +135,51 @@ for output in outputs:
     ```
   - Find all related workflow processes
     ```python
+    assay = await client.resources("ResearchStudy").search(
+                                    identifier="dataset-xxxx").first()
     workflow_tool_processes = await client.resources("Task").search(
-                                        subject=workflow.to_reference()).fetch_all()
+                                        subject=assay.to_reference()).fetch_all()
     ```
 ## Reference in resource
-- `Patient`
-  - generalPractitioner: [ Practitioner reference ]
-- `ResearchSubject` - primary measurements
-  - individual(patient): Patient reference
-  - study: None
-  - consent: Consent reference
-- `ResearchStudy`
+- `ResearchStudy` - Study
   - principalInvestigator: Practitioner reference
+- `ResearchStudy` - Assay
+  - protocol: [ PlanDefinition(Workflow) reference ]
+  - partOf: [ ResearchStudy(Study) reference ]
+- `ResearchSubject` - Assay cohort 
+  - individual(patient): Patient reference
+  - study: ResearchStudy(Assay) reference
+  - consent: Consent reference
+- `ResearchSubject` - dataset cohort 
+  - individual(patient): Patient reference
+  - consent: Consent reference
 - `Composition` - primary measurements
   - author: [ Patient reference, Practitioner reference ]
-  - subject: ResearchStudy reference
-  - entry: [ Observation reference, ImagingStudy reference]
+  - subject: Patient reference
+  - entry: [ Observation reference, ImagingStudy reference, DocumentReference reference ]
 - `ImagingStudy`
   - subject: Patient reference
   - endpoint: [ Endpoint Reference ]
   - referrer: Practitioner reference
 - `Observation` - primary measurements
   - subject: Patient reference
+- `DocumentRefernce`
+  - subject: Patient reference
 - `PlanDefinition`:
   - action.definitionCanonical: ActivityDefinition reference string
 - `ActivityDefinition`:
-  - participant: [ software uuid, model uuid]
+  - participant: [ software uuid, model uuid ]
 - `Task`:
   - owner: patient reference 
-  - for(subject): workflow reference
-  - focus: workflow tool reference
+  - for(subject): ResearchSubject(Assay) reference
+  - focus: ActivityDefinition(workflow) tool reference
   - basedOn: research subject reference
   - requester (Optional): practitioner reference
   - input: [ Observation reference, ImagingStudy reference ]
   - output: [ Observation reference, ImagingStudy reference ]
-- `Composition` - workflow tool result
-  - author: Patient reference
-  - subject: Task (workflow tool process) reference
-  - section:
-    - entry: Observations
-    - focus: ActivityDefinition (workflow tool) reference
-- `Observation` - workflow tool result
-  - focus: [ActivityDefinition reference]
 
-## Workflow
+
+## Work steps
 - Upload measurements dataset (primary measurements)
 - Upload workflow / workflow tools
 - Create Assay (get practitioner, study, and workflow process information)

@@ -25,8 +25,8 @@ class Test:
             active=True,
             identifier=[
                 Identifier(use=Code("official"), system="sparc.org",
-                           value='sparc-d557ac68-f365-0718-c945-8722ec')],
-            name=[HumanName(use="usual", text="Prasad", family="", given=["Prasad"])],
+                           value='sparc-f5635bbe-a3a7-4062-8f53-f4eb65683828')],
+            name=[HumanName(use="usual", text="Linkun Gao", family="Gao", given=["Linkun"])],
             gender="male"
         ))
 
@@ -76,5 +76,12 @@ if __name__ == '__main__':
     # loop.run_until_complete(test.test_workflow_tool_load_json_description("./dataset/ep4/tools"))
     # loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep4/workflow"))
     # loop.run_until_complete(test.test_workflow_process_load_json_description("./dataset/ep4/process/dataset-workflow-tool-process-1"))
-    loop.run_until_complete(
-        test.test_workflow_process_load_json_description("./dataset/ep4/process/dataset-workflow-tool-process-2"))
+    # loop.run_until_complete(
+    #     test.test_workflow_process_load_json_description("./dataset/ep4/process/dataset-workflow-tool-process-2"))
+
+    #  EP1
+    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep1/measurements"))
+    # loop.run_until_complete(test.test_workflow_tool_load_json_description("./dataset/ep1/tools"))
+    # loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep1/workflow"))
+    # loop.run_until_complete(
+    #     test.test_workflow_process_load_json_description("./dataset/ep1/process/dataset-workflow-tool-process-1"))
