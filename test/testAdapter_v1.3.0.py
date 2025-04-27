@@ -25,10 +25,18 @@ class Test:
             active=True,
             identifier=[
                 Identifier(use=Code("official"), system="sparc.org",
-                           value='sparc-f5635bbe-a3a7-4062-8f53-f4eb65683828')],
-            name=[HumanName(use="usual", text="Linkun Gao", family="Gao", given=["Linkun"])],
+                           value='sparc-d557ac68-f365-0718-c945-8722ec')],
+            name=[HumanName(use="usual", text="Prasad", family="", given=["Prasad"])],
             gender="male"
         ))
+        # await measurements.add_practitioner(researcher=Practitioner(
+        #     active=True,
+        #     identifier=[
+        #         Identifier(use=Code("official"), system="sparc.org",
+        #                    value='sparc-f5635bbe-a3a7-4062-8f53-f4eb65683828')],
+        #     name=[HumanName(use="usual", text="Linkun Gao", family="Gao", given=["Linkun"])],
+        #     gender="male"
+        # ))
 
         await measurements.add_measurements_description(data).generate_resources()
 

@@ -155,7 +155,7 @@ for output in outputs:
   - consent: Consent reference
 - `Composition` - primary measurements
   - author: [ Patient reference, Practitioner reference ]
-  - subject: Patient reference
+  - subject: ResearchSubject reference
   - entry: [ Observation reference, ImagingStudy reference, DocumentReference reference ]
 - `ImagingStudy`
   - subject: Patient reference
