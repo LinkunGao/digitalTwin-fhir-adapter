@@ -132,23 +132,10 @@ class Measurements(AbstractDigitalTWINBase, ABC):
 
     async def generate_resources(self):
 
-        # Generate ResearchStudy
-        # await self._generate_research_study()
         # Generate Patient
         await self._generate_patients()
 
         return self
-
-    # async def _generate_research_study(self):
-    #     identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
-    #                             value=self.primary_measurements["research_study"]["uuid"])
-    #     research_study = ResearchStudy(status="active", title=self.primary_measurements["research_study"]["name"],
-    #                                    identifier=[identifier], principal_investigator=self._practitioner_ref)
-    #     resource = await self.operator.create(research_study).save()
-    #     self.primary_measurements["research_study"]["resource"] = resource
-    #     self.primary_measurements["research_study"][
-    #         "reference"] = Reference(
-    #         reference=resource.to_reference().reference, display="Original dataset")
 
     async def _generate_patients(self):
         for p in self.primary_measurements["patients"]:

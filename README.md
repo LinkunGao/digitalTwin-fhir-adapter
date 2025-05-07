@@ -140,6 +140,37 @@ for output in outputs:
     workflow_tool_processes = await client.resources("Task").search(
                                         subject=assay.to_reference()).fetch_all()
     ```
+#### Search in DigitalTWINS on FHIR methods
+```python
+search = adapter.search()
+```
+
+- Finding all primary measurements for a patient
+```python
+measurements = await self.search.get_patient_measurements("xxx-xxxx")
+```
+
+- Find which workflow, tool, and primary data was used to generate a specific derived measurement observation
+
+```python
+res = await self.search.get_workflow_details_by_derived_data("Observation", "xxxx-xxxx")
+```
+
+- Find all inputs and their dataset uuid for generating the Observation
+```python
+res = await self.search.get_all_inputs_by_derived_data("Observation","xxx-xxxx")
+```
+
+- Find all tools and models used by a workflow and their workflow tool processes
+```python
+res = await self.search.get_all_workflow_tools_by_workflow(name="Automated torso model generation - script")
+```
+
+- Find inputs and outputs of a given tool in a workflow
+```python
+res = await self.search.get_all_inputs_outputs_of_workflow_tool(name="Tumour Position Correction (Manual) Tool")
+```
+
 ## Reference in resource
 - `ResearchStudy` - Study
   - principalInvestigator: Practitioner reference

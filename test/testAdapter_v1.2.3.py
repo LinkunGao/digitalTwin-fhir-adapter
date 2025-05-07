@@ -30,8 +30,6 @@ class PDF(FPDF):
 class Test:
     adapter = Adapter("http://localhost:8080/fhir/")
 
-    # adapter = Adapter("http://130.216.217.173:8080/fhir")
-
     async def test_load_bundle(self):
         # TODO 1: test load bundle dataset
         await self.adapter.loader().load_fhir_bundle('./dataset/dataset-fhir-bundles')
