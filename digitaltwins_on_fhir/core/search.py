@@ -378,7 +378,6 @@ class Search(AbstractSearch):
                     assay_ref = await task.get("for").to_resource()
                     for field in ("input", "output"):
                         io_items = task.get(field, [])
-                        print(io_items)
                         for item in io_items:
                             detail = await self._build_io_detail(item, assay_ref, patient)
                             if detail:
