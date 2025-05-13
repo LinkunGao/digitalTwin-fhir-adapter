@@ -218,3 +218,27 @@ res = await self.search.get_all_inputs_outputs_of_workflow_tool(name="Tumour Pos
 ## DigitalTWIN on FHIR Diagram
 ![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/vlatest.png)
 
+## Contributors
+
+Linkun Gao
+
+Chinchien Lin
+
+Ayah Elsayed
+
+Jiali Xu
+
+Gregory Sands
+
+David Nickerson
+
+Thiranja Prasad Babarenda Gamage
+
+## Publications
+
+1. **[Paper Title One](https://doi.org/...)**, Author1, Author2. *Journal Name*, Year.
+2. **[Paper Title Two](https://arxiv.org/abs/...)**, Author1, Author2. *Conference Name*, Year.
+
+Please cite the corresponding paper if you use this project in your research.
+
+
