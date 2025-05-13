@@ -163,12 +163,14 @@ res = await self.search.get_all_inputs_by_derived_data("Observation","xxx-xxxx")
 
 - Find all tools and models used by a workflow and their workflow tool processes
 ```python
-res = await self.search.get_all_workflow_tools_by_workflow(name="Automated torso model generation - script")
+res = await self.search.get_all_workflow_tools_by_workflow(
+                    name="Automated torso model generation - script")
 ```
 
 - Find inputs and outputs of a given tool in a workflow
 ```python
-res = await self.search.get_all_inputs_outputs_of_workflow_tool(name="Tumour Position Correction (Manual) Tool")
+res = await self.search.get_all_inputs_outputs_of_workflow_tool(
+                    name="Tumour Position Correction (Manual) Tool")
 ```
 
 ## Reference in resource
