@@ -163,12 +163,14 @@ res = await self.search.get_all_inputs_by_derived_data("Observation","xxx-xxxx")
 
 - Find all tools and models used by a workflow and their workflow tool processes
 ```python
-res = await self.search.get_all_workflow_tools_by_workflow(name="Automated torso model generation - script")
+res = await self.search.get_all_workflow_tools_by_workflow(
+                    name="Automated torso model generation - script")
 ```
 
 - Find inputs and outputs of a given tool in a workflow
 ```python
-res = await self.search.get_all_inputs_outputs_of_workflow_tool(name="Tumour Position Correction (Manual) Tool")
+res = await self.search.get_all_inputs_outputs_of_workflow_tool(
+                    name="Tumour Position Correction (Manual) Tool")
 ```
 
 ## Reference in resource
@@ -217,4 +219,28 @@ res = await self.search.get_all_inputs_outputs_of_workflow_tool(name="Tumour Pos
 
 ## DigitalTWIN on FHIR Diagram
 ![DigitalTWIN on FHIR](https://copper3d-brids.github.io/ehr-docs/fhir/03-roadmap/vlatest.png)
+
+## Contributors
+
+Linkun Gao
+
+Chinchien Lin
+
+Ayah Elsayed
+
+Jiali Xu
+
+Gregory Sands
+
+David Nickerson
+
+Thiranja Prasad Babarenda Gamage
+
+## Publications
+
+1. **[Paper Title One](https://doi.org/...)**, Author1, Author2. *Journal Name*, Year.
+2. **[Paper Title Two](https://arxiv.org/abs/...)**, Author1, Author2. *Conference Name*, Year.
+
+Please cite the corresponding paper if you use this project in your research.
+
 
