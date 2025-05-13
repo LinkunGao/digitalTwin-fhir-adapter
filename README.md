@@ -1,5 +1,8 @@
 # Digitaltwins on FHIR
 
+![Python3.9+](https://img.shields.io/badge/python_3.9+-34d399)
+![PyPI - Version](https://img.shields.io/pypi/v/digitaltwins-on-fhir)
+
 ## Usage
 
 - Setup and connect to FHIR server
