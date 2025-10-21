@@ -11,7 +11,7 @@ import json
 from typing import Literal
 
 class Test:
-    adapter = Adapter("http://localhost:8080/fhir/")
+    adapter = Adapter("http://localhost:8080/fhir")
 
     search = adapter.search()
 
@@ -59,7 +59,7 @@ class Test:
         workflow = self.adapter.digital_twin().workflow()
 
         for folder in subfolders:
-            with open(folder / 'workflow_fhir.json', 'r') as file:
+            with open(folder / 'workflow.json', 'r') as file:
                 data = json.load(file)
             await workflow.add_workflow_description(data).generate_resources()
 
@@ -81,7 +81,7 @@ class Test:
 if __name__ == '__main__':
     test = Test()
     loop = asyncio.get_event_loop()
-    # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements/dataset-1"))
+    loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements/dataset-1"))
     # loop.run_until_complete(test.test_measurements_load_json_description("./dataset/ep4/measurements/dataset-2"))
     # loop.run_until_complete(test.test_workflow_tool_load_json_description("./dataset/ep4/tools"))
     # loop.run_until_complete(test.test_workflow_load_json_description("./dataset/ep4/workflow"))

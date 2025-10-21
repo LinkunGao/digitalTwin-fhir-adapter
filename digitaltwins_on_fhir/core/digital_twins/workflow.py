@@ -78,8 +78,15 @@ class Workflow(AbstractDigitalTWINBase, ABC):
                                                 Coding(code=Code(value=r.get("code", None)), system=r.get("system", None),
                                                        display=r.get("display", None))])]
                                             ))
+            elif r.get("resource_type") == "DocumentReference":
+                temp.append(DataRequirement(data_requirement_type=Code("DocumentReference"),
+                                            code_filter=[DataRequirementCodeFilter(code=[
+                                                Coding(code=Code(value=r.get("code", None)), system=r.get("system", None),
+                                                       display=r.get("display", None))])]
+                                            ))
             elif r.get("resource_type") == "Observation":
                 temp.append(DataRequirement(data_requirement_type=Code("Observation"),
+                                            must_support=[r.get("unit", "")],
                                             code_filter=[DataRequirementCodeFilter(code=[
                                                 Coding(code=Code(value=r.get("code", None)), system=r.get("system", None),
                                                        display=r.get("display", None))])]))
