@@ -11,6 +11,9 @@ from .knowledgebase import DIGITALTWIN_ON_FHIR_SYSTEM
 from typing import Dict, Any, List
 from .measurements import Measurements
 from pprint import pprint
+import uuid
+import warnings
+from zoneinfo import ZoneInfo
 
 
 class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
@@ -50,7 +53,7 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
                 "reference": None,
             },
             "researcher": {
-                "uuid": process.get("researcher").get("uuid"),
+                "uuid": process.get("researcher").get("uuid", None),
                 "reference": None,
             },
             "assay": {
@@ -88,8 +91,8 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
                     "tool_uuid": tool_process.get("tool_uuid"),
                     "patient_uuid": patient.get("uuid"),
                     "date": tool_process.get("date"),
-                    "input": tool_process.get("input"),
-                    "output": tool_process.get("output"),
+                    "input": tool_process.get("inputs"),
+                    "output": tool_process.get("outputs"),
                     "output_dataset_uuid": process.get("dataset").get("uuid")
                 }
                 self.descriptions["processes"].append(temp)
@@ -103,22 +106,25 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
             "documentReference": []
         }
         for i, process in enumerate(processes):
-            if process.get("output"):
-                for j, o in enumerate(process.get("output", [])):
-                    if o.get("resource_type") == "ImagingStudy":
-                        o.update({
-                            "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-ImagingStudy-{i}-{j}"
-                        })
+            if process.get("outputs"):
+                for j, o in enumerate(process.get("outputs", [])):
+                    if o.get("resourceType") == "ImagingStudy":
+                        if not o.get("uuid", None):
+                            o.update({
+                                "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-ImagingStudy-{i}-{j}"
+                            })
                         res["imagingStudy"].append(o)
-                    elif o.get("resource_type") == "Observation":
-                        o.update({
-                            "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-Observation-{i}-{j}"
-                        })
+                    elif o.get("resourceType") == "Observation":
+                        if not o.get("uuid", None):
+                            o.update({
+                                "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-Observation-{i}-{j}"
+                            })
                         res["observations"].append(o)
-                    elif o.get("resource_type") == "DocumentReference":
-                        o.update({
-                            "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-DocumentReference-{i}-{j}"
-                        })
+                    elif o.get("resourceType") == "DocumentReference":
+                        if not o.get("uuid", None):
+                            o.update({
+                                "uuid": f"{process.get('uuid')}_{process.get('tool_uuid')}_Workflow-Process-Output-DocumentReference-{i}-{j}"
+                            })
                         res["documentReference"].append(o)
         return res
 
@@ -134,12 +140,17 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
         # 5. Generate processes
         for p in self.descriptions["processes"]:
             await self._generate_task(p)
+        # 6. Generate DiagnosticReport for all patients
+        await self._generate_diagnostic_report(self.descriptions)
         return self
 
     async def _generate_study_resource(self):
         researcher_description = self.descriptions.get("researcher")
         researcher = await self.get_resource("Practitioner", researcher_description.get("uuid"))
-        researcher_description["reference"] = researcher.to_reference()
+        if researcher:
+            researcher_description["reference"] = researcher.to_reference()
+        else:
+            researcher_description["reference"] = None
 
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
                                 value=self.descriptions["study"]["uuid"])
@@ -148,7 +159,7 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
             status="completed",
             title=self.descriptions["study"]["name"],
             principal_investigator=Reference(reference=researcher.to_reference().reference,
-                                             display=researcher["name"][0]["text"])
+                                             display=researcher["name"][0]["text"]) if researcher else None,
         )
         resource = await self.operator.create(study).save()
         self.descriptions.get("study")["reference"] = resource.to_reference()
@@ -248,13 +259,49 @@ class WorkflowToolProcess(AbstractDigitalTWINBase, ABC):
             {"reference": Reference(reference=resource.to_reference().reference, display="Workflow Tool Process")})
 
     async def _generate_task_input_output(self, item):
-        resource = await self.get_resource(item.get("resource_type"), item.get("uuid"))
+        resource = await self.get_resource(item.get("resourceType"), item.get("uuid"))
+        if not resource:
+            msg = f"The resource {item.get('resourceType')} or {item.get('uuid')} has not been found in fhir server."
+            warnings.warn(msg)
+            return None
+        display = item.get("display") if item.get("display", None) else item.get("resourceType")
         return TaskInputOutput(
             CodeableConcept(
                 codings=[
                     Coding(system="http://hl7.org/fhir/resource-types",
-                           code=Code(value=item.get("resource_type")),
-                           display=item.get("resource_type"))],
-                text=item.get("resource_type")),
-            value=Reference(reference=resource.to_reference().reference, display=item.get("resource_type"))
+                           code=Code(value=item.get("resourceType")),
+                           display=item.get("resourceType"))],
+                text=item.get("resourceType")),
+            value=Reference(reference=resource.to_reference().reference, display=display),
         )
+
+    async def _generate_diagnostic_report(self, description):
+        for p in description.get("measurements").get("patients"):
+            identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM,
+                                    value=str(uuid.uuid4()))
+
+            patient = next(pp for pp in self.descriptions.get("patients") if p.get("uuid") == p["uuid"])
+            result = []
+            imaging_study = []
+
+            for ob in p.get("observations"):
+                resource = await self.get_resource(ob.get("resourceType"), ob.get("uuid"))
+                if resource:
+                    result.append(Reference(reference=resource.to_reference().reference, display=ob.get("display")))
+
+            for img in p.get("imagingStudy"):
+                resource = await self.get_resource(img.get("resourceType"), img.get("uuid"))
+                if resource:
+                    imaging_study.append(Reference(reference=resource.to_reference().reference, display=img.get("display")))
+
+            report = DiagnosticReport(
+                identifier=[identifier],
+                status="final",
+                subject=Reference(reference=patient["reference"].reference),
+                code=CodeableConcept(text=f"Assay:{description['assay']['reference'].reference}"),
+                result=result,
+                imaging_study=imaging_study,
+                issued=transform_value(datetime.now(ZoneInfo("Pacific/Auckland")))
+            )
+            await self.generate_diagnostic_report(report)
+

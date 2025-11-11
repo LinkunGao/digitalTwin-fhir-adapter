@@ -109,12 +109,18 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                 data["composition"]["imagingStudy"].append(image)
 
             for i, doc in enumerate(cda_patient.get("documentReference", [])):
+                attachments = []
+                for a in doc.get("attachments", []):
+                    attachments.append({
+                        "contentType": a.get("contentType"),
+                        "url": a.get("url"),
+                        "title": a.get("title", None),
+                    })
                 doc_reference = {
                     "uuid": doc.get(
                         "uuid") or f"{self.cda_descriptions.get('dataset').get('uuid')}_{cda_patient.get('uuid')}_Primary_Measurements_Composition_DocumentReference_{i}",
-                    "contentType": doc.get("contentType"),
-                    "url": doc.get("url"),
-                    "title": doc.get("title", None),
+                    "description": doc.get("description", ""),
+                    "attachments": attachments,
                     "resource": None,
                     "reference": "",
                 }
@@ -329,6 +335,10 @@ class Measurements(AbstractDigitalTWINBase, ABC):
     async def _generate_document_reference(self, patient, doc):
         identifier = Identifier(system=DIGITALTWIN_ON_FHIR_SYSTEM, value=doc.get("uuid"))
         _type = LOINC.get(doc.get("contentType"), None)
+        content = []
+        for a in doc.get("attachments", []):
+            content.append(DocumentReferenceContent(
+                Attachment(content_type=a.get("contentType"), url=a.get("url"), title=a.get("title"))))
         document_reference = DocumentReference(
             identifier=[identifier],
             status="current",
@@ -343,8 +353,8 @@ class Measurements(AbstractDigitalTWINBase, ABC):
                 }
             ])],
             subject=patient.get("reference"),
-            content=[DocumentReferenceContent(
-                Attachment(content_type=doc.get("contentType"), url=doc.get("url"), title=doc.get("title")))]
+            description=doc.get("description", ""),
+            content=content
         )
         resource = await self.operator.create(document_reference).save()
         doc["resource"] = resource
